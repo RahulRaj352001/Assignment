@@ -16,7 +16,9 @@ const Sidebar: React.FC<SidebarProps> = ({ isMobileOpen, onMobileToggle }) => {
     { name: "Transactions", href: "/transactions", icon: "💰" },
     { name: "Categories", href: "/categories", icon: "🏷️" },
     // Admin-only links
-    ...(user?.role === "admin" ? [{ name: "Users", href: "/users", icon: "👥" }] : []),
+    ...(user?.role === "admin"
+      ? [{ name: "Users", href: "/users", icon: "👥" }]
+      : []),
   ];
 
   const isActive = (href: string) => {
@@ -38,7 +40,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isMobileOpen, onMobileToggle }) => {
 
       {/* Sidebar */}
       <div
-        className={`fixed inset-y-0 left-0 z-50 w-64 bg-gray-800 text-white transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0 ${
+        className={`fixed inset-y-0 left-0 z-50 w-64 bg-gray-800 dark:bg-gray-900 text-white transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0 ${
           isMobileOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
@@ -49,8 +51,18 @@ const Sidebar: React.FC<SidebarProps> = ({ isMobileOpen, onMobileToggle }) => {
             onClick={onMobileToggle}
             className="p-2 rounded-md text-gray-400 hover:text-white hover:bg-gray-700 transition-colors"
           >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            <svg
+              className="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
           </button>
         </div>

@@ -15,7 +15,7 @@ const ToastContainer: React.FC<ToastContainerProps> = ({
 
   return (
     <div
-      className="fixed top-4 right-4 z-50 space-y-3 max-w-sm w-full"
+      className="fixed top-4 right-4 z-50 space-y-3 max-w-sm w-full dark:space-y-3"
       role="region"
       aria-label="Notifications"
     >
