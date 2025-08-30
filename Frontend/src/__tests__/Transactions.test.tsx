@@ -34,13 +34,15 @@ jest.mock("../pages/transactions/TransactionsPage", () => {
   );
   return {
     ...originalModule,
-    fetchTransactions: jest.fn(() => Promise.resolve({
-      transactions: [],
-      total: 0,
-      page: 1,
-      limit: 20,
-      totalPages: 0,
-    })),
+    fetchTransactions: jest.fn(() =>
+      Promise.resolve({
+        transactions: [],
+        total: 0,
+        page: 1,
+        limit: 20,
+        totalPages: 0,
+      })
+    ),
   };
 });
 
@@ -68,7 +70,7 @@ const TestWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
 describe("Transactions", () => {
   beforeEach(() => {
-    mockFetchTransactions.mockClear();
+    jest.clearAllMocks();
   });
 
   describe("TransactionsPage", () => {
@@ -89,8 +91,12 @@ describe("Transactions", () => {
     });
 
     it("shows loading skeleton when fetching data", async () => {
-      // Mock loading state
-      mockFetchTransactions.mockImplementation(() => new Promise(() => {}));
+      // Mock loading state by overriding the mock
+      jest
+        .mocked(
+          require("../pages/transactions/TransactionsPage").fetchTransactions
+        )
+        .mockImplementation(() => new Promise(() => {}));
 
       render(
         <TestWrapper>
@@ -106,13 +112,17 @@ describe("Transactions", () => {
 
     it("displays empty state when no transactions exist", async () => {
       // Mock empty data
-      mockFetchTransactions.mockResolvedValue({
-        transactions: [],
-        total: 0,
-        page: 1,
-        limit: 20,
-        totalPages: 0,
-      });
+      jest
+        .mocked(
+          require("../pages/transactions/TransactionsPage").fetchTransactions
+        )
+        .mockResolvedValue({
+          transactions: [],
+          total: 0,
+          page: 1,
+          limit: 20,
+          totalPages: 0,
+        });
 
       render(
         <TestWrapper>
@@ -152,13 +162,17 @@ describe("Transactions", () => {
         },
       ];
 
-      mockFetchTransactions.mockResolvedValue({
-        transactions: mockTransactions,
-        total: 1,
-        page: 1,
-        limit: 20,
-        totalPages: 1,
-      });
+      jest
+        .mocked(
+          require("../pages/transactions/TransactionsPage").fetchTransactions
+        )
+        .mockResolvedValue({
+          transactions: mockTransactions,
+          total: 1,
+          page: 1,
+          limit: 20,
+          totalPages: 1,
+        });
 
       render(
         <TestWrapper>
@@ -181,9 +195,11 @@ describe("Transactions", () => {
 
     it("displays error banner when API call fails", async () => {
       // Mock error
-      mockFetchTransactions.mockRejectedValue(
-        new Error("Failed to fetch transactions")
-      );
+      jest
+        .mocked(
+          require("../pages/transactions/TransactionsPage").fetchTransactions
+        )
+        .mockRejectedValue(new Error("Failed to fetch transactions"));
 
       render(
         <TestWrapper>
@@ -258,13 +274,17 @@ describe("Transactions", () => {
         { id: "2", amount: 50, type: "expense" as const },
       ];
 
-      mockFetchTransactions.mockResolvedValue({
-        transactions: mockTransactions,
-        total: 2,
-        page: 1,
-        limit: 20,
-        totalPages: 1,
-      });
+      jest
+        .mocked(
+          require("../pages/transactions/TransactionsPage").fetchTransactions
+        )
+        .mockResolvedValue({
+          transactions: mockTransactions,
+          total: 2,
+          page: 1,
+          limit: 20,
+          totalPages: 1,
+        });
 
       render(
         <TestWrapper>
@@ -287,13 +307,17 @@ describe("Transactions", () => {
 
     it("shows pagination controls when multiple pages exist", async () => {
       // Mock data with multiple pages
-      mockFetchTransactions.mockResolvedValue({
-        transactions: [],
-        total: 100,
-        page: 1,
-        limit: 20,
-        totalPages: 5,
-      });
+      jest
+        .mocked(
+          require("../pages/transactions/TransactionsPage").fetchTransactions
+        )
+        .mockResolvedValue({
+          transactions: [],
+          total: 100,
+          page: 1,
+          limit: 20,
+          totalPages: 5,
+        });
 
       render(
         <TestWrapper>
