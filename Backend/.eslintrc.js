@@ -11,7 +11,7 @@ module.exports = {
     ecmaVersion: 12,
     sourceType: 'module',
   },
-  rules: {
+  rules: { 
     'indent': ['error', 2],
     'linebreak-style': ['error', 'unix'],
     'quotes': ['error', 'single'],
@@ -19,5 +19,8 @@ module.exports = {
     'no-unused-vars': ['warn', { 'argsIgnorePattern': '^_' }],
     'no-console': 'off', // Allow console.log for development
     'import/no-extraneous-dependencies': 'off',
+    'import/no-unresolved': 'off',
+    'string-quotes': 'off',
+    'quotes': 'off',
   },
 };

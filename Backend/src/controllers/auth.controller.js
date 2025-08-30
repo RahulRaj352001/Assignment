@@ -1,9 +1,33 @@
-// Auth controller placeholder
-// Will be implemented in Part 4 with request/response handling
+const authService = require("../services/auth.service");
+const response = require("../utils/response");
 
-class AuthController {
-  // Placeholder for authentication controller methods
-  // Will be implemented in Part 4
-}
+module.exports = {
+  async signup(req, res, next) {
+    try {
+      const { name, email, password, role } = req.body;
+      const { user, token } = await authService.signup({
+        name,
+        email,
+        password,
+        role,
+      });
+      return response.success(
+        res,
+        { user, token },
+        "User registered successfully"
+      );
+    } catch (err) {
+      return response.error(res, err.message, 400);
+    }
+  },
 
-module.exports = AuthController;
+  async login(req, res, next) {
+    try {
+      const { email, password } = req.body;
+      const { user, token } = await authService.login({ email, password });
+      return response.success(res, { user, token }, "Login successful");
+    } catch (err) {
+      return response.error(res, err.message, 401);
+    }
+  },
+};

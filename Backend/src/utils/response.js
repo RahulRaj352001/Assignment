@@ -1,35 +1,9 @@
-class ResponseFormatter {
-  static success(data, message = 'Success', statusCode = 200) {
-    return {
-      success: true,
-      message,
-      data,
-      statusCode
-    };
-  }
+module.exports = {
+  success(res, data, message = "Success") {
+    return res.json({ success: true, message, data });
+  },
 
-  static error(message = 'Error occurred', statusCode = 500, errors = null) {
-    return {
-      success: false,
-      message,
-      errors,
-      statusCode
-    };
-  }
-
-  static paginated(data, page, limit, total, message = 'Success') {
-    return {
-      success: true,
-      message,
-      data,
-      pagination: {
-        page: parseInt(page),
-        limit: parseInt(limit),
-        total,
-        pages: Math.ceil(total / limit)
-      }
-    };
-  }
-}
-
-module.exports = ResponseFormatter;
+  error(res, message = "Error", status = 500) {
+    return res.status(status).json({ success: false, message });
+  },
+};

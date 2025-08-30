@@ -1,9 +1,11 @@
-// Transaction model placeholder
-// Will be implemented in Part 7 with database schema
-
-class Transaction {
-  // Placeholder for transaction model methods
-  // Will be implemented in Part 7
-}
-
-module.exports = Transaction;
+module.exports = {
+  id: "uuid",
+  user_id: "uuid (FK users.id)",
+  category_id: "int (FK categories.id)",
+  type: "enum: income | expense",
+  amount: "decimal",
+  description: "string",
+  transaction_date: "timestamp",
+  created_at: "timestamp",
+  updated_at: "timestamp",
+};

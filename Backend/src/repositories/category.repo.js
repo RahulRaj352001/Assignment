@@ -1,8 +1,16 @@
-const pool = require('../config/db');
+const pool = require("../config/db");
 
-class CategoryRepository {
-  // Placeholder for category repository methods
-  // Will be implemented in Part 8
-}
+module.exports = {
+  async getAllCategories() {
+    const result = await pool.query(
+      "SELECT * FROM categories ORDER BY name ASC"
+    );
+    return result.rows;
+  },
 
-module.exports = CategoryRepository;
+  async createCategory(name) {
+    const query = "INSERT INTO categories (name) VALUES ($1) RETURNING *";
+    const result = await pool.query(query, [name]);
+    return result.rows[0];
+  },
+};

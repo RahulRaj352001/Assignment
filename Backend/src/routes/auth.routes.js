@@ -1,12 +1,11 @@
-// Auth routes placeholder
-// Will be implemented in Part 4 with route definitions
-
-const express = require('express');
+const express = require("express");
 const router = express.Router();
+const authController = require("../controllers/auth.controller");
 
-// Placeholder routes - will be implemented in Part 4
-router.get('/health', (req, res) => {
-  res.json({ message: 'Auth routes placeholder' });
-});
+// POST /api/auth/signup
+router.post("/signup", authController.signup);
+
+// POST /api/auth/login
+router.post("/login", authController.login);
 
 module.exports = router;

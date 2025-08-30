@@ -1,9 +1,10 @@
-// User model placeholder
-// Will be implemented in Part 3 with database schema
-
-class User {
-  // Placeholder for user model methods
-  // Will be implemented in Part 3
-}
-
-module.exports = User;
+// Reference only (not ORM, not Sequelize)
+module.exports = {
+  id: "uuid",
+  name: "string",
+  email: "string (unique)",
+  password: "hashed string",
+  role: "enum: admin | user | read-only",
+  created_at: "timestamp",
+  updated_at: "timestamp",
+};
