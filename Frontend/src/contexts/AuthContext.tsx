@@ -11,9 +11,16 @@ import { AuthState, User } from "../types/auth.d";
 interface AuthContextType extends AuthState {
   login: (email: string, password: string) => Promise<void>;
   loginWithToken: (token: string, user: User) => void;
+  signup: (data: {
+    name: string;
+    email: string;
+    password: string;
+    role?: string;
+  }) => Promise<void>;
   register: (name: string, email: string, password: string) => Promise<void>;
   logout: () => void;
   refreshUser: () => Promise<void>;
+  refreshToken: () => Promise<void>;
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(
@@ -68,6 +75,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     console.log("Login successful:", { user, token, isAuthenticated: true }); // Debug log
   }, []);
 
+  const signup = async (data: {
+    name: string;
+    email: string;
+    password: string;
+    role?: string;
+  }) => {
+    const { data: responseData } = await axiosClient.post("/auth/signup", data);
+    localStorage.setItem("token", responseData.token);
+    setState({
+      user: responseData.user,
+      token: responseData.token,
+      isAuthenticated: true,
+    });
+  };
+
   const register = async (name: string, email: string, password: string) => {
     const { data } = await axiosClient.post("/auth/register", {
       name,
@@ -78,9 +100,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     setState({ user: data.user, token: data.token, isAuthenticated: true });
   };
 
+  const refreshToken = async () => {
+    try {
+      const { data } = await axiosClient.post("/auth/refresh");
+      localStorage.setItem("token", data.token);
+      setState((prev) => ({ ...prev, token: data.token }));
+    } catch (error) {
+      logout();
+    }
+  };
+
   return (
     <AuthContext.Provider
-      value={{ ...state, login, loginWithToken, register, logout, refreshUser }}
+      value={{
+        ...state,
+        login,
+        loginWithToken,
+        signup,
+        register,
+        logout,
+        refreshUser,
+        refreshToken,
+      }}
     >
       {children}
     </AuthContext.Provider>

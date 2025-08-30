@@ -128,12 +128,24 @@ const LoginPage: React.FC = () => {
             </button>
           </form>
 
+          {/* Forgot Password Link */}
+          <div className="mt-4 text-center">
+            <Link
+              to="/forgot-password"
+              className="text-sm text-indigo-600 hover:text-indigo-500 hover:underline"
+            >
+              Forgot your password?
+            </Link>
+          </div>
 
-           {/* sign up Link */}
-           <div className="mt-6 text-center">
+          {/* Sign up Link */}
+          <div className="mt-6 text-center">
             <p className="text-sm text-gray-600">
               Don't have an account?{" "}
-              <Link to="/register" className="text-indigo-600 hover:underline font-medium">
+              <Link
+                to="/signup"
+                className="text-indigo-600 hover:underline font-medium"
+              >
                 Sign up
               </Link>
             </p>

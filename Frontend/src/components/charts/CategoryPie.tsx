@@ -31,9 +31,13 @@ const CategoryPie: React.FC<CategoryPieProps> = ({ data }) => {
           "#06B6D4", // Cyan
           "#F97316", // Orange
           "#84CC16", // Lime
+          "#EC4899", // Pink
+          "#14B8A6", // Teal
         ],
         borderWidth: 2,
         borderColor: "#ffffff",
+        hoverBorderWidth: 3,
+        hoverBorderColor: "#1F2937",
       },
     ],
   };
@@ -53,6 +57,13 @@ const CategoryPie: React.FC<CategoryPieProps> = ({ data }) => {
         },
       },
       tooltip: {
+        backgroundColor: "rgba(0, 0, 0, 0.8)",
+        titleColor: "#ffffff",
+        bodyColor: "#ffffff",
+        borderColor: "#374151",
+        borderWidth: 1,
+        cornerRadius: 8,
+        displayColors: true,
         callbacks: {
           label: function (context: any) {
             const label = context.label || "";
@@ -60,6 +71,9 @@ const CategoryPie: React.FC<CategoryPieProps> = ({ data }) => {
             const total = context.dataset.data.reduce((a: number, b: number) => a + b, 0);
             const percentage = ((value / total) * 100).toFixed(1);
             return `${label}: $${value.toLocaleString()} (${percentage}%)`;
+          },
+          title: function (tooltipItems: any) {
+            return tooltipItems[0].label;
           },
         },
       },

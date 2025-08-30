@@ -85,11 +85,20 @@ const MonthlyLine: React.FC<MonthlyLineProps> = ({ data }) => {
       tooltip: {
         mode: "index" as const,
         intersect: false,
+        backgroundColor: "rgba(0, 0, 0, 0.8)",
+        titleColor: "#ffffff",
+        bodyColor: "#ffffff",
+        borderColor: "#374151",
+        borderWidth: 1,
+        cornerRadius: 8,
         callbacks: {
           label: function (context: any) {
             const label = context.dataset.label || "";
             const value = context.parsed.y;
             return `${label}: $${value.toLocaleString()}`;
+          },
+          title: function (tooltipItems: any) {
+            return tooltipItems[0].label;
           },
         },
       },

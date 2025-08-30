@@ -5,6 +5,7 @@ interface TransactionTableProps {
   transactions: Transaction[];
   onEdit: (transaction: Transaction) => void;
   onDelete: (transaction: Transaction) => void;
+  canModify?: boolean;
 }
 
 type SortField = "date" | "amount";
@@ -14,6 +15,7 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
   transactions,
   onEdit,
   onDelete,
+  canModify = true,
 }) => {
   const [sortField, setSortField] = useState<SortField>("date");
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
@@ -86,9 +88,11 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
                 <SortIcon field="amount" />
               </div>
             </th>
-            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Actions
-            </th>
+            {canModify && (
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Actions
+              </th>
+            )}
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-200">
@@ -117,22 +121,24 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
                   {formatAmount(transaction.amount)}
                 </span>
               </td>
-              <td className="px-4 py-3 whitespace-nowrap text-sm font-medium">
-                <div className="flex space-x-2">
-                  <button
-                    onClick={() => onEdit(transaction)}
-                    className="text-indigo-600 hover:text-indigo-900"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => onDelete(transaction)}
-                    className="text-red-600 hover:text-red-900"
-                  >
-                    Delete
-                  </button>
-                </div>
-              </td>
+              {canModify && (
+                <td className="px-4 py-3 whitespace-nowrap text-sm font-medium">
+                  <div className="flex space-x-2">
+                    <button
+                      onClick={() => onEdit(transaction)}
+                      className="text-indigo-600 hover:text-indigo-900"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => onDelete(transaction)}
+                      className="text-red-600 hover:text-red-900"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </td>
+              )}
             </tr>
           ))}
         </tbody>
