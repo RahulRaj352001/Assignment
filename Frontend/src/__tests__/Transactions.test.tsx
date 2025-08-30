@@ -27,21 +27,22 @@ jest.mock("../hooks/useDebounce", () => ({
   useDebounce: (value: any) => value,
 }));
 
-// Mock the fetchTransactions function
+// Mock the fetchTransactions function at module level
 jest.mock("../pages/transactions/TransactionsPage", () => {
   const originalModule = jest.requireActual(
     "../pages/transactions/TransactionsPage"
   );
   return {
     ...originalModule,
-    fetchTransactions: jest.fn(),
+    fetchTransactions: jest.fn(() => Promise.resolve({
+      transactions: [],
+      total: 0,
+      page: 1,
+      limit: 20,
+      totalPages: 0,
+    })),
   };
 });
-
-const mockFetchTransactions = jest.fn();
-jest
-  .mocked(require("../pages/transactions/TransactionsPage").fetchTransactions)
-  .mockImplementation(mockFetchTransactions);
 
 // Test wrapper component
 const TestWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => {
