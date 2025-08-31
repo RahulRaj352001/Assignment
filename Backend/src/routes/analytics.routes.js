@@ -1,24 +1,33 @@
 const express = require("express");
 const router = express.Router();
+const analyticsController = require("../controllers/analytics.controller");
 const auth = require("../middleware/auth");
 const permit = require("../middleware/rbac");
 const { analyticsLimiter } = require("../middleware/rateLimit");
-const response = require("../utils/response");
 
-// Example: GET /api/analytics/monthly
+// All analytics endpoints → all roles allowed
 router.get(
   "/monthly",
   auth,
   permit("admin", "user", "read-only"),
   analyticsLimiter,
-  async (req, res) => {
-    try {
-      // Analytics service logic will be added in Part 9
-      return response.success(res, {}, "Analytics coming soon");
-    } catch (err) {
-      return response.error(res, err.message);
-    }
-  }
+  analyticsController.monthlySummary
+);
+
+router.get(
+  "/categories",
+  auth,
+  permit("admin", "user", "read-only"),
+  analyticsLimiter,
+  analyticsController.categoryBreakdown
+);
+
+router.get(
+  "/income-expense",
+  auth,
+  permit("admin", "user", "read-only"),
+  analyticsLimiter,
+  analyticsController.incomeVsExpense
 );
 
 module.exports = router;

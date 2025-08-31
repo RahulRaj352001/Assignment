@@ -1,9 +1,22 @@
 module.exports = {
-  success(res, data, message = "Success") {
-    return res.json({ success: true, message, data });
+  success(res, data = null, message = "Success", statusCode = 200) {
+    return res.status(statusCode).json({
+      success: true,
+      message,
+      data,
+    });
   },
 
-  error(res, message = "Error", status = 500) {
-    return res.status(status).json({ success: false, message });
+  error(res, message = "Error", statusCode = 500, details = null) {
+    const response = {
+      success: false,
+      message,
+    };
+
+    if (details) {
+      response.details = details;
+    }
+
+    return res.status(statusCode).json(response);
   },
 };
