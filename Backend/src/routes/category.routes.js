@@ -1,12 +1,24 @@
-// Category routes placeholder
-// Will be implemented in Part 8 with route definitions
-
-const express = require('express');
+const express = require("express");
 const router = express.Router();
+const categoryController = require("../controllers/category.controller");
+const auth = require("../middleware/auth");
+const permit = require("../middleware/rbac");
 
-// Placeholder routes - will be implemented in Part 8
-router.get('/health', (req, res) => {
-  res.json({ message: 'Category routes placeholder' });
-});
+// GET categories - All roles
+router.get(
+  "/",
+  auth,
+  permit("admin", "user", "read-only"),
+  categoryController.list
+);
+
+// POST create - Only admin
+router.post("/", auth, permit("admin"), categoryController.create);
+
+// PUT update - Only admin
+router.put("/:id", auth, permit("admin"), categoryController.update);
+
+// DELETE remove - Only admin
+router.delete("/:id", auth, permit("admin"), categoryController.delete);
 
 module.exports = router;

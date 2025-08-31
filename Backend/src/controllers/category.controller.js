@@ -1,9 +1,45 @@
-// Category controller placeholder
-// Will be implemented in Part 8 with request/response handling
+const categoryService = require("../services/category.service");
+const response = require("../utils/response");
 
-class CategoryController {
-  // Placeholder for category controller methods
-  // Will be implemented in Part 8
-}
+module.exports = {
+  async create(req, res) {
+    try {
+      const category = await categoryService.createCategory(req.body);
+      return response.success(res, category, "Category created");
+    } catch (err) {
+      return response.error(res, err.message);
+    }
+  },
 
-module.exports = CategoryController;
+  async list(req, res) {
+    try {
+      const categories = await categoryService.getAllCategories();
+      return response.success(res, categories, "Categories fetched");
+    } catch (err) {
+      return response.error(res, err.message);
+    }
+  },
+
+  async update(req, res) {
+    try {
+      const category = await categoryService.updateCategory(
+        req.params.id,
+        req.body
+      );
+      if (!category) return response.error(res, "Category not found", 404);
+      return response.success(res, category, "Category updated");
+    } catch (err) {
+      return response.error(res, err.message);
+    }
+  },
+
+  async delete(req, res) {
+    try {
+      const category = await categoryService.deleteCategory(req.params.id);
+      if (!category) return response.error(res, "Category not found", 404);
+      return response.success(res, category, "Category deleted");
+    } catch (err) {
+      return response.error(res, err.message);
+    }
+  },
+};

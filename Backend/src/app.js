@@ -10,6 +10,7 @@ const errorHandler = require("./middleware/errorHandler");
 const authRoutes = require("./routes/auth.routes");
 const userRoutes = require("./routes/user.routes");
 const transactionRoutes = require("./routes/transaction.routes");
+const categoryRoutes = require("./routes/category.routes");
 const analyticsRoutes = require("./routes/analytics.routes");
 
 require("dotenv").config();
@@ -54,6 +55,9 @@ app.use("/api/users", userRoutes);
 
 // Transaction routes (protected)
 app.use("/api/transactions", transactionRoutes);
+
+// Category routes (protected)
+app.use("/api/categories", categoryRoutes);
 
 // Analytics routes (protected)
 app.use("/api/analytics", analyticsRoutes);
