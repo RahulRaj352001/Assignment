@@ -1,5 +1,6 @@
 const userRepo = require("../repositories/user.repo");
 const response = require("../utils/response");
+const bcrypt = require("bcrypt");
 
 module.exports = {
   async getProfile(req, res) {
@@ -105,6 +106,97 @@ module.exports = {
         return response.error(res, "User not found", 404);
       }
       return response.success(res, deletedUser, "User deleted successfully");
+    } catch (err) {
+      return response.error(res, err.message, 500);
+    }
+  },
+
+  async createUser(req, res) {
+    try {
+      const { name, email, password, role = "user" } = req.body;
+
+      // Basic validation
+      if (!name || !email || !password) {
+        return response.error(
+          res,
+          "Name, email, and password are required",
+          400
+        );
+      }
+
+      // Check if email is already taken
+      const existingUser = await userRepo.findByEmail(email);
+      if (existingUser) {
+        return response.error(res, "Email already in use", 400);
+      }
+
+      // Validate role
+      if (!["admin", "user", "read-only"].includes(role)) {
+        return response.error(res, "Invalid role", 400);
+      }
+
+      // Hash password
+      const hashedPassword = await bcrypt.hash(password, 10);
+
+      // Create user
+      const newUser = await userRepo.createUser({
+        name,
+        email,
+        password: hashedPassword,
+        role,
+      });
+
+      // Remove password from response
+      const { password: _, ...userWithoutPassword } = newUser;
+
+      return response.success(
+        res,
+        userWithoutPassword,
+        "User created successfully"
+      );
+    } catch (err) {
+      return response.error(res, err.message, 500);
+    }
+  },
+
+  async updateUser(req, res) {
+    try {
+      const { name, email, password, role } = req.body;
+      const userId = req.params.id;
+
+      // Basic validation
+      if (!name || !email) {
+        return response.error(res, "Name and email are required", 400);
+      }
+
+      // Check if email is already taken by another user
+      const existingUser = await userRepo.findByEmail(email);
+      if (existingUser && existingUser.id !== userId) {
+        return response.error(res, "Email already in use", 400);
+      }
+
+      // Validate role if provided
+      if (role && !["admin", "user", "read-only"].includes(role)) {
+        return response.error(res, "Invalid role", 400);
+      }
+
+      // Prepare update data
+      const updateData = { name, email };
+      if (password) {
+        // Hash the new password
+        updateData.password = await bcrypt.hash(password, 10);
+      }
+      if (role) {
+        updateData.role = role;
+      }
+
+      // Update user
+      const updatedUser = await userRepo.updateUser(userId, updateData);
+      if (!updatedUser) {
+        return response.error(res, "User not found", 404);
+      }
+
+      return response.success(res, updatedUser, "User updated successfully");
     } catch (err) {
       return response.error(res, err.message, 500);
     }

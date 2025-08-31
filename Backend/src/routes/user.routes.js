@@ -18,7 +18,11 @@ router.get(
   userController.getAllUsers
 );
 
+router.post("/", auth, permit("admin"), userController.createUser);
+
 router.get("/:id", auth, permit("admin"), userController.getUserById);
+
+router.put("/:id", auth, permit("admin"), userController.updateUser);
 
 router.put(
   "/:id/role",

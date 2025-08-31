@@ -176,9 +176,6 @@ const UserTable: React.FC<UserTableProps> = ({ users, onEdit, onDelete }) => {
                     }`}>
                       {user.role === "admin" ? "👑 Admin" : user.role === "user" ? "👤 User" : "👁️ Read-only"}
                     </span>
-                    <span className="text-xs text-gray-500">
-                      {new Date(user.createdAt).toLocaleDateString()}
-                    </span>
                   </div>
                 </div>
                 <div className="flex items-center space-x-2 ml-4">

@@ -52,25 +52,48 @@ module.exports = {
     let query;
     let values;
 
-    if (updates.password) {
-      // Update including password
+    if (updates.password && updates.role) {
+      // Update password, role, name, and email
       query = `
         UPDATE users 
-        SET password = $1, updated_at = NOW()
-        WHERE id = $2
+        SET name = $1, email = $2, password = $3, role = $4, updated_at = NOW()
+        WHERE id = $5
         RETURNING id, name, email, role, created_at, updated_at
       `;
-      values = [updates.password, id];
+      values = [
+        updates.name,
+        updates.email,
+        updates.password,
+        updates.role,
+        id,
+      ];
+    } else if (updates.password) {
+      // Update including password (name, email, password)
+      query = `
+        UPDATE users 
+        SET name = $1, email = $2, password = $3, updated_at = NOW()
+        WHERE id = $4
+        RETURNING id, name, email, role, created_at, updated_at
+      `;
+      values = [updates.name, updates.email, updates.password, id];
+    } else if (updates.role) {
+      // Update name, email, and role (no password)
+      query = `
+        UPDATE users 
+        SET name = $1, email = $2, role = $3, updated_at = NOW()
+        WHERE id = $4
+        RETURNING id, name, email, role, created_at, updated_at
+      `;
+      values = [updates.name, updates.email, updates.role, id];
     } else {
       // Update name and email only
-      const { name, email } = updates;
       query = `
         UPDATE users 
         SET name = $1, email = $2, updated_at = NOW()
         WHERE id = $3
         RETURNING id, name, email, role, created_at, updated_at
       `;
-      values = [name, email, id];
+      values = [updates.name, updates.email, id];
     }
 
     const result = await pool.query(query, values);
