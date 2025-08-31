@@ -1,8 +1,10 @@
 import React, { useState } from "react";
 import { Transaction } from "../../types/transaction";
+import { Category } from "../../types/category";
 
 interface TransactionTableProps {
   transactions: Transaction[];
+  categories: Category[];
   onEdit: (transaction: Transaction) => void;
   onDelete: (transaction: Transaction) => void;
   canModify?: boolean;
@@ -13,6 +15,7 @@ type SortDirection = "asc" | "desc";
 
 const TransactionTable: React.FC<TransactionTableProps> = ({
   transactions,
+  categories,
   onEdit,
   onDelete,
   canModify = true,
@@ -31,25 +34,48 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
 
   const sortedTransactions = [...transactions].sort((a, b) => {
     let comparison = 0;
-    
+
     if (sortField === "date") {
-      comparison = new Date(a.date).getTime() - new Date(b.date).getTime();
+      const dateA = a.transaction_date
+        ? new Date(a.transaction_date).getTime()
+        : 0;
+      const dateB = b.transaction_date
+        ? new Date(b.transaction_date).getTime()
+        : 0;
+      comparison = dateA - dateB;
     } else if (sortField === "amount") {
-      comparison = a.amount - b.amount;
+      const amountA = parseFloat(a.amount?.toString() || "0") || 0;
+      const amountB = parseFloat(b.amount?.toString() || "0") || 0;
+      comparison = amountA - amountB;
     }
-    
+
     return sortDirection === "asc" ? comparison : -comparison;
   });
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString();
+  const formatDate = (dateString: string | null | undefined) => {
+    if (!dateString) return "N/A";
+    try {
+      return new Date(dateString).toLocaleDateString();
+    } catch (error) {
+      return "Invalid Date";
+    }
   };
 
-  const formatAmount = (amount: number) => {
+  const formatAmount = (amount: number | string | null | undefined) => {
+    const numAmount = parseFloat(amount?.toString() || "0") || 0;
     return new Intl.NumberFormat("en-US", {
       style: "currency",
       currency: "USD",
-    }).format(amount);
+    }).format(numAmount);
+  };
+
+  const getCategoryName = (categoryId: number | string) => {
+    // Handle both string and number category IDs
+    const categoryIdStr = categoryId?.toString();
+    const category = categories.find(
+      (cat) => cat.id?.toString() === categoryIdStr
+    );
+    return category ? category.name : `Category ${categoryId}`;
   };
 
   const SortIcon = ({ field }: { field: SortField }) => {
@@ -99,14 +125,14 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
           {sortedTransactions.map((transaction) => (
             <tr key={transaction.id} className="hover:bg-gray-50">
               <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                {formatDate(transaction.date)}
+                {formatDate(transaction.transaction_date)}
               </td>
               <td className="px-4 py-3 text-sm text-gray-900">
                 {transaction.description}
               </td>
               <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
                 <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                  {transaction.category}
+                  {getCategoryName(transaction.category_id)}
                 </span>
               </td>
               <td className="px-4 py-3 whitespace-nowrap text-sm">
@@ -143,7 +169,7 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
           ))}
         </tbody>
       </table>
-      
+
       {sortedTransactions.length === 0 && (
         <div className="text-center py-8 text-gray-500">
           No transactions found. Add your first transaction to get started!

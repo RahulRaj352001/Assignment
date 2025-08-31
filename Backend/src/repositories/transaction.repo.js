@@ -1,13 +1,27 @@
 const pool = require("../config/db");
 
 module.exports = {
-  async createTransaction({ user_id, category_id, type, amount, description }) {
+  async createTransaction({
+    user_id,
+    category_id,
+    type,
+    amount,
+    description,
+    transaction_date,
+  }) {
     const query = `
       INSERT INTO transactions (user_id, category_id, type, amount, description, transaction_date)
-      VALUES ($1, $2, $3, $4, $5, NOW())
+      VALUES ($1, $2, $3, $4, $5, $6)
       RETURNING *
     `;
-    const values = [user_id, category_id, type, amount, description];
+    const values = [
+      user_id,
+      category_id,
+      type,
+      amount,
+      description,
+      transaction_date || new Date(),
+    ];
     const result = await pool.query(query, values);
     return result.rows[0];
   },
@@ -18,9 +32,16 @@ module.exports = {
     offset,
     { type, category_id, start_date, end_date }
   ) {
-    let filters = [`t.user_id = $1`];
-    let params = [user_id];
-    let idx = 2;
+    let filters = [];
+    let params = [];
+    let idx = 1;
+
+    // If user_id is provided, filter by it (for regular users)
+    // If user_id is null, admin can see all transactions
+    if (user_id) {
+      filters.push(`t.user_id = $${idx++}`);
+      params.push(user_id);
+    }
 
     if (type) {
       filters.push(`t.type = $${idx++}`);
@@ -35,18 +56,37 @@ module.exports = {
       params.push(start_date, end_date);
     }
 
+    // Get total count first
+    const whereClause =
+      filters.length > 0 ? `WHERE ${filters.join(" AND ")}` : "";
+    const countQuery = `
+      SELECT COUNT(*) as total
+      FROM transactions t
+      ${whereClause}
+    `;
+    const countResult = await pool.query(countQuery, params);
+    const total = parseInt(countResult.rows[0].total);
+
+    // Get paginated results
     const query = `
       SELECT t.*, c.name AS category_name
       FROM transactions t
       LEFT JOIN categories c ON t.category_id = c.id
-      WHERE ${filters.join(" AND ")}
+      ${whereClause}
       ORDER BY t.transaction_date DESC
       LIMIT $${idx++} OFFSET $${idx++}
     `;
     params.push(limit, offset);
 
     const result = await pool.query(query, params);
-    return result.rows;
+
+    return {
+      transactions: result.rows,
+      total,
+      page: Math.floor(offset / limit) + 1,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    };
   },
 
   async updateTransaction(
@@ -54,27 +94,30 @@ module.exports = {
     user_id,
     { category_id, type, amount, description }
   ) {
+    // If user_id is null, admin can update any transaction
+    const userFilter = user_id ? `AND user_id = $6` : "";
     const query = `
       UPDATE transactions
       SET category_id = $1, type = $2, amount = $3, description = $4, updated_at = NOW()
-      WHERE id = $5 AND user_id = $6
+      WHERE id = $5 ${userFilter}
       RETURNING *
     `;
-    const result = await pool.query(query, [
-      category_id,
-      type,
-      amount,
-      description,
-      id,
-      user_id,
-    ]);
+    const params = [category_id, type, amount, description, id];
+    if (user_id) params.push(user_id);
+
+    const result = await pool.query(query, params);
     return result.rows[0];
   },
 
   async deleteTransaction(id, user_id) {
-    const query =
-      "DELETE FROM transactions WHERE id = $1 AND user_id = $2 RETURNING *";
-    const result = await pool.query(query, [id, user_id]);
+    // If user_id is null, admin can delete any transaction
+    const userFilter = user_id ? `AND user_id = $2` : "";
+    const query = `DELETE FROM transactions WHERE id = $1 ${userFilter} RETURNING *`;
+
+    const params = [id];
+    if (user_id) params.push(user_id);
+
+    const result = await pool.query(query, params);
     return result.rows[0];
   },
 };

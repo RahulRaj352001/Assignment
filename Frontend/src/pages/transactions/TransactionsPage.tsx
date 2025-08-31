@@ -1,77 +1,25 @@
 import React, { useState, useMemo, useCallback } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "../../hooks/useAuth";
 import { useDebounce } from "../../hooks/useDebounce";
 import TransactionTable from "../../components/transactions/TransactionTable";
 import TransactionForm from "../../components/transactions/TransactionForm";
 import DeleteConfirmModal from "../../components/transactions/DeleteConfirmModal";
-import { Transaction } from "../../types/transaction";
-
-// Mock API functions - replace with real API calls when backend is ready
-const fetchTransactions = async (
-  page: number,
-  limit: number,
-  search?: string
-) => {
-  // Simulate API call with realistic delay
-  await new Promise((resolve) => setTimeout(resolve, 800));
-
-  // Generate mock data
-  const mockTransactions: Transaction[] = Array.from(
-    { length: 100 },
-    (_, index) => ({
-      id: (index + 1).toString(),
-      date: new Date(2024, 0, 1 + (index % 365)).toISOString().split("T")[0],
-      description: `Transaction ${index + 1}`,
-      category: [
-        "Food",
-        "Transport",
-        "Entertainment",
-        "Shopping",
-        "Bills",
-        "Salary",
-        "Freelance",
-      ][index % 7],
-      amount: Math.round((Math.random() * 1000 + 50) * 100) / 100,
-      type: index % 3 === 0 ? "income" : ("expense" as "income" | "expense"),
-    })
-  );
-
-  // Filter by search if provided
-  let filteredTransactions = mockTransactions;
-  if (search) {
-    filteredTransactions = mockTransactions.filter(
-      (t) =>
-        t.description.toLowerCase().includes(search.toLowerCase()) ||
-        t.category.toLowerCase().includes(search.toLowerCase())
-    );
-  }
-
-  // Pagination
-  const startIndex = (page - 1) * limit;
-  const endIndex = startIndex + limit;
-  const paginatedTransactions = filteredTransactions.slice(
-    startIndex,
-    endIndex
-  );
-
-  return {
-    transactions: paginatedTransactions,
-    total: filteredTransactions.length,
-    page,
-    limit,
-    totalPages: Math.ceil(filteredTransactions.length / limit),
-  };
-};
+import {
+  Transaction,
+  CreateTransactionInput,
+  UpdateTransactionInput,
+} from "../../types/transaction";
+import { useTransactions } from "../../hooks/useTransactions";
+import { useCategory } from "../../hooks/useCategory";
 
 const TransactionsPage: React.FC = () => {
   const { user } = useAuth();
-  const queryClient = useQueryClient();
 
   // State for pagination and search
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
   const [pageSize] = useState(20);
+  const [selectedUserId, setSelectedUserId] = useState<string>("");
 
   // State for modals
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -84,42 +32,63 @@ const TransactionsPage: React.FC = () => {
   // Debounced search term for API calls
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
 
-  // RBAC checks
-  const canModify = user?.role === "admin" || user?.role === "user";
-  const isReadOnly = user?.role === "read-only";
-
-  // React Query: Fetch transactions with pagination and search
+  // Use the transactions hook with filters
   const {
-    data: transactionsData,
+    transactions,
+    total,
+    page,
+    totalPages,
     isLoading,
     error,
     refetch,
-  } = useQuery({
-    queryKey: ["transactions", currentPage, pageSize, debouncedSearchTerm],
-    queryFn: () =>
-      fetchTransactions(currentPage, pageSize, debouncedSearchTerm),
-    staleTime: 1000 * 60 * 5, // 5 minutes cache
-    gcTime: 1000 * 60 * 10, // 10 minutes garbage collection
+    createTransaction,
+    updateTransaction,
+    deleteTransaction,
+    isCreating,
+    isUpdating,
+    isDeleting,
+    canCreate,
+    canUpdate,
+    canDelete,
+    canRead,
+    isAdmin,
+  } = useTransactions({
+    page: currentPage,
+    limit: pageSize,
+    user_id: selectedUserId || undefined,
   });
+
+  // Get categories for the table
+  const { categories } = useCategory();
+
+  // RBAC checks
+  const canModify = canUpdate || canDelete;
+  const isReadOnly = user?.role === "read-only";
 
   // Memoized calculations for performance
   const summaryData = useMemo(() => {
-    if (!transactionsData?.transactions) {
+    if (!transactions || !Array.isArray(transactions)) {
       return { totalIncome: 0, totalExpenses: 0, balance: 0 };
     }
 
-    const totalIncome = transactionsData.transactions
+    const totalIncome = transactions
       .filter((t) => t.type === "income")
-      .reduce((sum, t) => sum + t.amount, 0);
+      .reduce(
+        (sum, t) => sum + (parseFloat(t.amount?.toString() || "0") || 0),
+        0
+      );
 
-    const totalExpenses = transactionsData.transactions
+    const totalExpenses = transactions
       .filter((t) => t.type === "expense")
-      .reduce((sum, t) => sum + t.amount, 0);
+      .reduce(
+        (sum, t) => sum + (parseFloat(t.amount?.toString() || "0") || 0),
+        0
+      );
 
     const balance = totalIncome - totalExpenses;
 
     return { totalIncome, totalExpenses, balance };
-  }, [transactionsData?.transactions]);
+  }, [transactions]);
 
   // Callback handlers for performance optimization
   const handleAddTransaction = useCallback(() => {
@@ -138,49 +107,43 @@ const TransactionsPage: React.FC = () => {
   }, []);
 
   const handleFormSubmit = useCallback(
-    async (transactionData: Omit<Transaction, "id">) => {
+    async (
+      transactionData: CreateTransactionInput | UpdateTransactionInput
+    ) => {
       try {
-        // Simulate API call
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-
         if (editingTransaction) {
-          alert("Transaction updated successfully!");
+          // Update existing transaction
+          await updateTransaction({
+            id: editingTransaction.id,
+            data: transactionData as UpdateTransactionInput,
+          });
         } else {
-          alert("Transaction added successfully!");
+          // Create new transaction
+          await createTransaction(transactionData as CreateTransactionInput);
         }
-
-        // Invalidate and refetch transactions
-        queryClient.invalidateQueries({ queryKey: ["transactions"] });
-        refetch();
 
         setIsFormOpen(false);
         setEditingTransaction(null);
       } catch (error) {
-        alert("Failed to save transaction. Please try again.");
+        // Error handling is done in the hook
+        console.error("Transaction operation failed:", error);
       }
     },
-    [editingTransaction, queryClient, refetch]
+    [editingTransaction, createTransaction, updateTransaction]
   );
 
   const handleConfirmDelete = useCallback(async () => {
     if (deletingTransaction) {
       try {
-        // Simulate API call
-        await new Promise((resolve) => setTimeout(resolve, 800));
-
-        alert("Transaction deleted successfully!");
-
-        // Invalidate and refetch transactions
-        queryClient.invalidateQueries({ queryKey: ["transactions"] });
-        refetch();
-
+        await deleteTransaction(deletingTransaction.id);
         setIsDeleteModalOpen(false);
         setDeletingTransaction(null);
       } catch (error) {
-        alert("Failed to delete transaction. Please try again.");
+        // Error handling is done in the hook
+        console.error("Delete operation failed:", error);
       }
     }
-  }, [deletingTransaction, queryClient, refetch]);
+  }, [deletingTransaction, deleteTransaction]);
 
   const handleSearchChange = useCallback((value: string) => {
     setSearchTerm(value);
@@ -199,6 +162,11 @@ const TransactionsPage: React.FC = () => {
   const handleDeleteModalClose = useCallback(() => {
     setIsDeleteModalOpen(false);
     setDeletingTransaction(null);
+  }, []);
+
+  const handleUserFilterChange = useCallback((userId: string) => {
+    setSelectedUserId(userId);
+    setCurrentPage(1); // Reset to first page when changing user filter
   }, []);
 
   // Loading skeleton
@@ -242,7 +210,7 @@ const TransactionsPage: React.FC = () => {
       <p className="text-gray-500 dark:text-gray-400 mb-6">
         Get started by adding your first transaction to track your finances.
       </p>
-      {canModify && (
+      {canCreate && (
         <button
           onClick={handleAddTransaction}
           className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
@@ -278,7 +246,7 @@ const TransactionsPage: React.FC = () => {
             Manage your income and expenses
           </p>
         </div>
-        {canModify && (
+        {canCreate && (
           <button
             onClick={handleAddTransaction}
             className="mt-4 sm:mt-0 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
@@ -376,18 +344,13 @@ const TransactionsPage: React.FC = () => {
 
           <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400">
             <span>
-              Page {currentPage} of {transactionsData?.totalPages || 1}
+              Page {page} of {totalPages || 1}
             </span>
             <span>•</span>
-            <span>{transactionsData?.total || 0} total transactions</span>
+            <span>{total || 0} total transactions</span>
           </div>
         </div>
       </div>
-
-      {/* Error Banner */}
-      {error && (
-        <ErrorBanner message="Failed to load transactions. Please try again." />
-      )}
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -396,7 +359,7 @@ const TransactionsPage: React.FC = () => {
             Total Income
           </h3>
           <p className="text-2xl font-bold text-green-600 dark:text-green-400">
-            ${summaryData.totalIncome.toFixed(2)}
+            ${(summaryData?.totalIncome || 0).toFixed(2)}
           </p>
         </div>
         <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow border border-gray-200 dark:border-gray-700">
@@ -404,7 +367,7 @@ const TransactionsPage: React.FC = () => {
             Total Expenses
           </h3>
           <p className="text-2xl font-bold text-red-600 dark:text-red-400">
-            ${summaryData.totalExpenses.toFixed(2)}
+            ${(summaryData?.totalExpenses || 0).toFixed(2)}
           </p>
         </div>
         <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow border border-gray-200 dark:border-gray-700">
@@ -413,12 +376,12 @@ const TransactionsPage: React.FC = () => {
           </h3>
           <p
             className={`text-2xl font-bold ${
-              summaryData.balance >= 0
+              (summaryData?.balance || 0) >= 0
                 ? "text-green-600 dark:text-green-400"
                 : "text-red-600 dark:text-red-400"
             }`}
           >
-            ${summaryData.balance.toFixed(2)}
+            ${(summaryData?.balance || 0).toFixed(2)}
           </p>
         </div>
       </div>
@@ -437,12 +400,12 @@ const TransactionsPage: React.FC = () => {
               }
             />
           </div>
-        ) : !transactionsData?.transactions ||
-          transactionsData.transactions.length === 0 ? (
+        ) : !transactions || transactions.length === 0 ? (
           <EmptyState />
         ) : (
           <TransactionTable
-            transactions={transactionsData.transactions}
+            transactions={transactions}
+            categories={categories}
             onEdit={handleEditTransaction}
             onDelete={handleDeleteTransaction}
             canModify={canModify}
@@ -451,39 +414,36 @@ const TransactionsPage: React.FC = () => {
       </div>
 
       {/* Pagination Controls */}
-      {transactionsData && transactionsData.totalPages > 1 && (
+      {totalPages > 1 && (
         <div className="flex items-center justify-center space-x-2">
           <button
-            onClick={() => handlePageChange(currentPage - 1)}
-            disabled={currentPage === 1}
+            onClick={() => handlePageChange(page - 1)}
+            disabled={page === 1}
             className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Previous
           </button>
 
-          {Array.from(
-            { length: Math.min(5, transactionsData.totalPages) },
-            (_, i) => {
-              const page = i + 1;
-              return (
-                <button
-                  key={page}
-                  onClick={() => handlePageChange(page)}
-                  className={`px-3 py-2 text-sm font-medium rounded-md ${
-                    page === currentPage
-                      ? "bg-blue-600 text-white"
-                      : "text-gray-500 bg-white border border-gray-300 hover:bg-gray-50"
-                  }`}
-                >
-                  {page}
-                </button>
-              );
-            }
-          )}
+          {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+            const pageNum = i + 1;
+            return (
+              <button
+                key={pageNum}
+                onClick={() => handlePageChange(pageNum)}
+                className={`px-3 py-2 text-sm font-medium rounded-md ${
+                  pageNum === page
+                    ? "bg-blue-600 text-white"
+                    : "text-gray-500 bg-white border border-gray-300 hover:bg-gray-50"
+                }`}
+              >
+                {pageNum}
+              </button>
+            );
+          })}
 
           <button
-            onClick={() => handlePageChange(currentPage + 1)}
-            disabled={currentPage === transactionsData.totalPages}
+            onClick={() => handlePageChange(page + 1)}
+            disabled={page === totalPages}
             className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Next
@@ -497,6 +457,7 @@ const TransactionsPage: React.FC = () => {
         onClose={handleFormClose}
         onSubmit={handleFormSubmit}
         transaction={editingTransaction}
+        isSubmitting={isCreating || isUpdating}
       />
 
       {/* Delete Confirmation Modal */}
@@ -504,6 +465,7 @@ const TransactionsPage: React.FC = () => {
         isOpen={isDeleteModalOpen}
         onClose={handleDeleteModalClose}
         onConfirm={handleConfirmDelete}
+        isDeleting={isDeleting}
       />
     </div>
   );
