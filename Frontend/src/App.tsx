@@ -12,9 +12,7 @@ const DashboardPage = lazy(() => import("./pages/dashboard/DashboardPage"));
 const TransactionsPage = lazy(
   () => import("./pages/transactions/TransactionsPage")
 );
-const TransactionDetailPage = lazy(
-  () => import("./pages/TransactionDetailPage")
-);
+
 const CategoriesPage = lazy(() => import("./pages/categories/CategoriesPage"));
 const UsersPage = lazy(() => import("./pages/users/UsersPage"));
 const ProfilePage = lazy(() => import("./pages/ProfilePage"));
@@ -72,16 +70,6 @@ function App() {
               <ProtectedRoute>
                 <AppLayout>
                   <TransactionsPage />
-                </AppLayout>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/transactions/:id"
-            element={
-              <ProtectedRoute>
-                <AppLayout>
-                  <TransactionDetailPage />
                 </AppLayout>
               </ProtectedRoute>
             }
