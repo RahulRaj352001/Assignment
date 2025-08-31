@@ -1,6 +1,5 @@
 import React, { useState, useMemo, useCallback } from "react";
 import { useAuth } from "../../hooks/useAuth";
-import { useDebounce } from "../../hooks/useDebounce";
 import TransactionTable from "../../components/transactions/TransactionTable";
 import TransactionForm from "../../components/transactions/TransactionForm";
 import DeleteConfirmModal from "../../components/transactions/DeleteConfirmModal";
@@ -11,15 +10,15 @@ import {
 } from "../../types/transaction";
 import { useTransactions } from "../../hooks/useTransactions";
 import { useCategory } from "../../hooks/useCategory";
+import { useUsers } from "../../hooks/useUsers";
 
 const TransactionsPage: React.FC = () => {
   const { user } = useAuth();
 
-  // State for pagination and search
+  // State for pagination
   const [currentPage, setCurrentPage] = useState(1);
-  const [searchTerm, setSearchTerm] = useState("");
   const [pageSize] = useState(20);
-  const [selectedUserId, setSelectedUserId] = useState<string>("");
+  const [selectedUserId, setSelectedUserId] = useState<string>(user?.id || "");
 
   // State for modals
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -28,9 +27,6 @@ const TransactionsPage: React.FC = () => {
     useState<Transaction | null>(null);
   const [deletingTransaction, setDeletingTransaction] =
     useState<Transaction | null>(null);
-
-  // Debounced search term for API calls
-  const debouncedSearchTerm = useDebounce(searchTerm, 500);
 
   // Use the transactions hook with filters
   const {
@@ -60,6 +56,9 @@ const TransactionsPage: React.FC = () => {
 
   // Get categories for the table
   const { categories } = useCategory();
+
+  // Get users for admin selection
+  const { users } = useUsers();
 
   // RBAC checks
   const canModify = canUpdate || canDelete;
@@ -144,11 +143,6 @@ const TransactionsPage: React.FC = () => {
       }
     }
   }, [deletingTransaction, deleteTransaction]);
-
-  const handleSearchChange = useCallback((value: string) => {
-    setSearchTerm(value);
-    setCurrentPage(1); // Reset to first page when searching
-  }, []);
 
   const handlePageChange = useCallback((page: number) => {
     setCurrentPage(page);
@@ -305,49 +299,52 @@ const TransactionsPage: React.FC = () => {
         </div>
       )}
 
-      {/* Search and Filters */}
-      <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow border border-gray-200 dark:border-gray-700">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
-          <div className="flex-1 max-w-md">
-            <label
-              htmlFor="search"
-              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-            >
-              Search Transactions
-            </label>
-            <div className="relative">
-              <input
-                type="text"
-                id="search"
-                value={searchTerm}
-                onChange={(e) => handleSearchChange(e.target.value)}
-                placeholder="Search by description or category..."
-                className="w-full px-3 py-2 pl-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              />
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <svg
-                  className="h-5 w-5 text-gray-400"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
+      {/* Filters */}
+      <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow border border-gray-200 dark:border-gray-700 flex flex-col gap-4">
+        <div className="flex items-center justify-between mt-4">
+          {/* Admin User Selection - Left Side */}
+          <div className="flex items-center">
+            {user?.role === "admin" && (
+              <div>
+                <label
+                  htmlFor="user-select"
+                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                  />
-                </svg>
+                  Select User
+                </label>
+                <select
+                  id="user-select"
+                  value={selectedUserId}
+                  onChange={(e) => handleUserFilterChange(e.target.value)}
+                  className="w-48 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                >
+                  {users?.map((u) => (
+                    <option key={u.id} value={u.id}>
+                      {u.name}
+                    </option>
+                  ))}
+                </select>
               </div>
-            </div>
+            )}
           </div>
 
-          <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400">
+          {/* Pagination Info - Right Side */}
+          <div className="flex items-center space-x-4 text-sm text-gray-600 dark:text-gray-400">
             <span>
               Page {page} of {totalPages || 1}
             </span>
-            <span>•</span>
+            <span className="text-gray-400">•</span>
             <span>{total || 0} total transactions</span>
+            {user?.role === "admin" && (
+              <>
+                <span className="text-gray-400">•</span>
+                <span className="text-blue-600 dark:text-blue-400">
+                  User:{" "}
+                  {users?.find((u) => u.id === selectedUserId)?.name ||
+                    "Unknown"}
+                </span>
+              </>
+            )}
           </div>
         </div>
       </div>

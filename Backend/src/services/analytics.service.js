@@ -56,7 +56,7 @@ module.exports = {
         parseFloat(row.total_income || 0) - parseFloat(row.total_expense || 0),
     }));
 
-    await setCacheWithExpiry(cacheKey, 900, JSON.stringify(formattedData)); // 15 min
+    await setCacheWithExpiry(cacheKey, formattedData, 900); // 15 min
     return formattedData;
   },
 
@@ -83,7 +83,7 @@ module.exports = {
       percentage: 0, // Will be calculated in frontend
     }));
 
-    await setCacheWithExpiry(cacheKey, 900, JSON.stringify(formattedData)); // 15 min
+    await setCacheWithExpiry(cacheKey, formattedData, 900); // 15 min
     return formattedData;
   },
 
@@ -112,7 +112,7 @@ module.exports = {
       expense: parseFloat(row.expense || 0),
     }));
 
-    await setCacheWithExpiry(cacheKey, 900, JSON.stringify(formattedData)); // 15 min
+    await setCacheWithExpiry(cacheKey, formattedData, 900); // 15 min
     return formattedData;
   },
 };

@@ -185,7 +185,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
                               : "border-gray-300"
                           }`}
                         >
-                          <option value="">Select user</option>
+  
                           {users.map((user) => (
                             <option key={user.id} value={user.id}>
                               {user.name} ({user.email})

@@ -26,6 +26,9 @@ export const useTransactions = (filters: TransactionFilters = {}) => {
   // Admin can filter by user_id, regular users can only see their own transactions
   if (user?.role === "admin" && filters.user_id) {
     queryParams.append("user_id", filters.user_id);
+  } else if (!filters.user_id && user?.id) {
+    // If no user_id is provided, use current user's ID
+    queryParams.append("user_id", user.id);
   }
 
   // Fetch transactions

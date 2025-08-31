@@ -13,7 +13,7 @@ const DashboardPage: React.FC = () => {
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [fromDate, setFromDate] = useState<string>("");
   const [toDate, setToDate] = useState<string>("");
-  const [selectedUserId, setSelectedUserId] = useState<string>("");
+  const [selectedUserId, setSelectedUserId] = useState<string>(user?.id || "");
 
   // Generate last 5 years for year selector
   const yearOptions = useMemo(() => {
@@ -162,7 +162,6 @@ const DashboardPage: React.FC = () => {
                 onChange={(e) => setSelectedUserId(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               >
-                <option value="">All Users</option>
                 {users.map((u) => (
                   <option key={u.id} value={u.id}>
                     {u.name}
