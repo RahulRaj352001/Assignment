@@ -50,8 +50,8 @@ This frontend is designed to work with a Node.js + Express + PostgreSQL backend.
 
 ### User Management (Protected Routes)
 
-- `GET /users/me` - Get current user profile
-- `PUT /users/me` - Update current user profile
+- `GET /users/profile/me` - Get current user profile
+- `PUT /users/profile/me` - Update current user profile
 
 ### Required Backend Features
 

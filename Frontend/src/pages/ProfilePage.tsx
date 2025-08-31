@@ -46,7 +46,7 @@ const ProfilePage: React.FC = () => {
   const onSubmit = async (data: ProfileFormData) => {
     setIsLoading(true);
     try {
-      await axiosClient.put("/users/me", data);
+      await axiosClient.put("/users/profile/me", data);
       addNotification("success", "Profile updated successfully!");
       await refreshUser(); // Refresh user data
       setIsEditing(false);

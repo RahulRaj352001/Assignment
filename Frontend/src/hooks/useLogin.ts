@@ -11,7 +11,7 @@ export function useLogin() {
   >({
     mutationFn: async (data: LoginFormInputs) => {
       const response = await axiosClient.post("/auth/login", data);
-      return response.data;
-    }
+      return response.data.data;
+    },
   });
 }

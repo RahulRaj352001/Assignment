@@ -11,7 +11,7 @@ export function useRegister() {
   >({
     mutationFn: async (data: Omit<RegisterFormInputs, "confirmPassword">) => {
       const response = await axiosClient.post("/auth/register", data);
-      return response.data;
+      return response.data.data;
     }
   });
 }

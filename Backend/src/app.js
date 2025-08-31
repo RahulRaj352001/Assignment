@@ -12,10 +12,13 @@ const userRoutes = require("./routes/user.routes");
 const transactionRoutes = require("./routes/transaction.routes");
 const categoryRoutes = require("./routes/category.routes");
 const analyticsRoutes = require("./routes/analytics.routes");
+const pool = require("./config/db");
 
 require("dotenv").config();
 
 const app = express();
+
+pool.connect();
 
 // ✅ Security Middlewares
 app.use(helmet()); // Secure HTTP headers

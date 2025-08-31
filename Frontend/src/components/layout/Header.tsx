@@ -9,6 +9,8 @@ const Header: React.FC = () => {
     logout();
   };
 
+  console.log(user , "header");
+
   return (
     <header className="sticky top-0 z-40 bg-white dark:bg-gray-900 shadow-md border-b border-gray-200 dark:border-gray-700 h-16">
       <div className="flex items-center justify-between h-full px-6">

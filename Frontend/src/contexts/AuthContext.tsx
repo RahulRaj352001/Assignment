@@ -40,8 +40,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     if (!state.token) return;
 
     try {
-      const { data } = await axiosClient.get("/users/me");
-      setState((prev) => ({ ...prev, user: data.user, isAuthenticated: true }));
+      const { data } = await axiosClient.get("/users/profile/me");
+      console.log(data , "data");
+      setState((prev) => ({ ...prev, user: data.data, isAuthenticated: true }));
     } catch (error) {
       console.error("Failed to fetch user profile:", error);
       logout();
@@ -61,6 +62,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   const loginWithToken = useCallback((token: string, user: User) => {
+    console.log(user , token);
     localStorage.setItem("token", token);
     setState({ user, token, isAuthenticated: true });
     console.log("Login successful:", { user, token, isAuthenticated: true }); // Debug log

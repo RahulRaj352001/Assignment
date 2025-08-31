@@ -8,7 +8,6 @@ module.exports = {
       RETURNING id, name, email, role, created_at
     `;
     const values = [name, email, password, role];
-    console.log(query, values);
     const result = await pool.query(query, values);
     return result.rows[0];
   },
