@@ -19,13 +19,10 @@ export const useCategory = () => {
   } = useQuery<Category[]>({
     queryKey: ["categories"],
     queryFn: async () => {
-      console.log("Fetching categories...");
       try {
         const response = await axiosClient.get("/categories");
-        console.log("Categories response:", response.data);
         return response.data.data;
       } catch (error) {
-        console.error("Error fetching categories:", error);
         throw error;
       }
     },

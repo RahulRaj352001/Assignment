@@ -10,22 +10,18 @@ const RESET_OTP = "1234";
 
 module.exports = {
   async signup({ name, email, password, role = "user" }) {
-    console.log(name, email, password, role);
     const existing = await userRepo.findByEmail(email);
-    console.log(existing);
     if (existing) {
       throw new Error("User already exists with this email");
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
-    console.log(hashedPassword);
     const user = await userRepo.createUser({
       name,
       email,
       password: hashedPassword,
       role,
     });
-    console.log(user);
 
     const token = jwt.sign(
       { id: user.id, email: user.email, role: user.role },
@@ -65,15 +61,9 @@ module.exports = {
       throw new Error("User not found with this email");
     }
 
-    // In production, this would send an email with the OTP
-    // For now, we'll just return success message
-    console.log(`📧 Password reset OTP for ${email}: ${RESET_OTP}`);
-
     return {
       message: "Password reset OTP sent to your email",
       email: email,
-      // In production, don't return OTP in response
-      // This is just for testing purposes
       otp: RESET_OTP,
     };
   },

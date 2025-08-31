@@ -46,29 +46,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
     try {
       setIsLoading(true);
-      console.log("Fetching user profile with token:", state.token);
       const { data } = await axiosClient.get("/users/profile/me");
-      console.log("User profile response:", data);
-
       if (data && data.data) {
         setState((prev) => ({
           ...prev,
           user: data.data,
           isAuthenticated: true,
         }));
-        console.log("User profile set successfully:", data.data);
       } else {
-        console.error("Invalid user profile data structure:", data);
         logout();
       }
     } catch (error: any) {
-      console.error("Failed to fetch user profile:", error);
-      console.error("Error details:", {
-        message: error.message,
-        response: error.response?.data,
-        status: error.response?.status,
-        url: error.config?.url,
-      });
       logout();
     } finally {
       setIsLoading(false);
@@ -89,11 +77,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     setState({ user: data.user, token: data.token, isAuthenticated: true });
   };
 
-  const loginWithToken = useCallback((token: string, user: User) => {
-    console.log(user, token);
+  const loginWithToken = useCallback((token: string, user: User) => {       
     localStorage.setItem("token", token);
     setState({ user, token, isAuthenticated: true });
-    console.log("Login successful:", { user, token, isAuthenticated: true }); // Debug log
   }, []);
 
   const register = async (name: string, email: string, password: string) => {

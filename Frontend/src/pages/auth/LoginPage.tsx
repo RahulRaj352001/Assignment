@@ -23,7 +23,6 @@ const LoginPage: React.FC = () => {
   const onSubmit = async (data: LoginFormInputs) => {
     try {
       const result = await loginAsync(data);
-      console.log("Login result:", result); // Debug log
       loginWithToken(result.token, result.user);
       addNotification("success", "Login successful! Welcome back.");
       navigate("/dashboard");

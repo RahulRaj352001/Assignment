@@ -21,15 +21,15 @@ const app = express();
 
 pool.connect();
 
-// ✅ Security Middlewares
-app.use(helmet()); // Secure HTTP headers
-app.use(xssClean()); // Prevent XSS attacks
-app.use(express.json({ limit: "10kb" })); // Prevent large payload DOS attacks
+// Security and middleware setup
+app.use(helmet());
+app.use(xssClean());
+app.use(express.json({ limit: "10kb" }));
 app.use(express.urlencoded({ extended: true, limit: "10kb" }));
 app.use(compression());
 app.use(morgan("dev"));
 
-// ✅ CORS (restrict to frontend domain in production)
+// CORS configuration
 app.use(
   cors({
     origin: "*",
@@ -48,29 +48,21 @@ app.get("/api/health", (req, res) => {
 
   res.json({
     status: "ok",
-    message: "Backend running 🚀",
+    message: "Backend running",
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV,
     redis: redisStatus,
   });
 });
 
-// Auth routes
+// API Routes
 app.use("/api/auth", authRoutes);
-
-// User routes (protected)
 app.use("/api/users", userRoutes);
-
-// Transaction routes (protected)
 app.use("/api/transactions", transactionRoutes);
-
-// Category routes (protected)
 app.use("/api/categories", categoryRoutes);
-
-// Analytics routes (protected)
 app.use("/api/analytics", analyticsRoutes);
 
-// Error handling middleware (must be last)
+// Error handling middleware
 app.use(errorHandler);
 
 module.exports = app;

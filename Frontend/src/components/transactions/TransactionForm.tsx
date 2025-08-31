@@ -41,11 +41,6 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
   const isEditMode = !!transaction;
   const isAdmin = user?.role === "admin";
 
-  // Debug: Log categories to see what's being fetched
-  console.log("Categories fetched:", categories);
-  console.log("Categories loading:", categoriesLoading);
-  console.log("Categories error:", categoriesError);
-
   const {
     register,
     handleSubmit,
