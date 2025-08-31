@@ -15,6 +15,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isMobileOpen, onMobileToggle }) => {
     { name: "Dashboard", href: "/dashboard", icon: "📊" },
     { name: "Transactions", href: "/transactions", icon: "💰" },
     { name: "Categories", href: "/categories", icon: "🏷️" },
+    { name: "Profile", href: "/profile", icon: "👤" },
     // Admin-only links
     ...(user?.role === "admin"
       ? [{ name: "Users", href: "/users", icon: "👥" }]

@@ -11,12 +11,6 @@ import { AuthState, User } from "../types/auth.d";
 interface AuthContextType extends AuthState {
   login: (email: string, password: string) => Promise<void>;
   loginWithToken: (token: string, user: User) => void;
-  signup: (data: {
-    name: string;
-    email: string;
-    password: string;
-    role?: string;
-  }) => Promise<void>;
   register: (name: string, email: string, password: string) => Promise<void>;
   logout: () => void;
   refreshUser: () => Promise<void>;
@@ -41,21 +35,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     setState({ user: null, token: null, isAuthenticated: false });
   }, []);
 
-  // TODO: Implement real API call when backend is ready
+  // Fetch current user profile from backend
   const refreshUser = useCallback(async () => {
-    // For now, just set authenticated if token exists
-    // try {
-    //   const { data } = await axiosClient.get("/auth/me");
-    //   setState((prev) => ({ ...prev, user: data.user, isAuthenticated: true }));
-    // } catch (error) {
-    //   logout();
-    // }
+    if (!state.token) return;
 
-    // Temporary: If token exists, assume user is authenticated
-    if (state.token) {
-      setState((prev) => ({ ...prev, isAuthenticated: true }));
+    try {
+      const { data } = await axiosClient.get("/users/me");
+      setState((prev) => ({ ...prev, user: data.user, isAuthenticated: true }));
+    } catch (error) {
+      console.error("Failed to fetch user profile:", error);
+      logout();
     }
-  }, [state.token]);
+  }, [state.token, logout]);
 
   useEffect(() => {
     if (state.token) {
@@ -74,21 +65,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     setState({ user, token, isAuthenticated: true });
     console.log("Login successful:", { user, token, isAuthenticated: true }); // Debug log
   }, []);
-
-  const signup = async (data: {
-    name: string;
-    email: string;
-    password: string;
-    role?: string;
-  }) => {
-    const { data: responseData } = await axiosClient.post("/auth/signup", data);
-    localStorage.setItem("token", responseData.token);
-    setState({
-      user: responseData.user,
-      token: responseData.token,
-      isAuthenticated: true,
-    });
-  };
 
   const register = async (name: string, email: string, password: string) => {
     const { data } = await axiosClient.post("/auth/register", {
@@ -116,7 +92,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         ...state,
         login,
         loginWithToken,
-        signup,
         register,
         logout,
         refreshUser,

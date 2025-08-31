@@ -61,7 +61,7 @@ describe("Authentication", () => {
       );
 
       expect(screen.getByText("Sign in to your account")).toBeInTheDocument();
-      expect(screen.getByLabelText("Email address")).toBeInTheDocument();
+      expect(screen.getByLabelText("Email")).toBeInTheDocument();
       expect(screen.getByLabelText("Password")).toBeInTheDocument();
       expect(
         screen.getByRole("button", { name: "Sign in" })
@@ -94,7 +94,7 @@ describe("Authentication", () => {
         </TestWrapper>
       );
 
-      const emailInput = screen.getByLabelText("Email address");
+      const emailInput = screen.getByLabelText("Email");
       fireEvent.change(emailInput, { target: { value: "invalid-email" } });
 
       const submitButton = screen.getByRole("button", { name: "Sign in" });
@@ -102,7 +102,7 @@ describe("Authentication", () => {
 
       await waitFor(() => {
         expect(
-          screen.getByText("Please enter a valid email address")
+          screen.getByText("Invalid email")
         ).toBeInTheDocument();
       });
     });
@@ -114,7 +114,7 @@ describe("Authentication", () => {
         </TestWrapper>
       );
 
-      const emailInput = screen.getByLabelText("Email address");
+      const emailInput = screen.getByLabelText("Email");
       const passwordInput = screen.getByLabelText("Password");
       const submitButton = screen.getByRole("button", { name: "Sign in" });
 
@@ -128,22 +128,6 @@ describe("Authentication", () => {
           password: "password123",
         });
       });
-    });
-
-    it("displays demo credentials information", () => {
-      render(
-        <TestWrapper>
-          <LoginPage />
-        </TestWrapper>
-      );
-
-      expect(screen.getByText("Demo Credentials")).toBeInTheDocument();
-      expect(
-        screen.getByText("admin@example.com / admin123")
-      ).toBeInTheDocument();
-      expect(
-        screen.getByText("user@example.com / user123")
-      ).toBeInTheDocument();
     });
 
     it("has links to signup and forgot password", () => {

@@ -28,7 +28,7 @@ app.use(morgan("dev"));
 // ✅ CORS (restrict to frontend domain in production)
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL || "http://localhost:3000",
+    origin: "*",
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true,
   })

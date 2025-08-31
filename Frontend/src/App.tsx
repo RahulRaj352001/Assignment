@@ -6,7 +6,7 @@ import ToastContainer from "./components/ui/ToastContainer";
 import { useNotification } from "./hooks/useNotification";
 
 const Login = lazy(() => import("./pages/auth/LoginPage"));
-const Signup = lazy(() => import("./pages/auth/SignupPage"));
+const Register = lazy(() => import("./pages/auth/RegisterPage"));
 const ForgotPassword = lazy(() => import("./pages/auth/ForgotPasswordPage"));
 const DashboardPage = lazy(() => import("./pages/dashboard/DashboardPage"));
 const TransactionsPage = lazy(
@@ -17,6 +17,7 @@ const TransactionDetailPage = lazy(
 );
 const CategoriesPage = lazy(() => import("./pages/categories/CategoriesPage"));
 const UsersPage = lazy(() => import("./pages/users/UsersPage"));
+const ProfilePage = lazy(() => import("./pages/ProfilePage"));
 const UnauthorizedPage = lazy(() => import("./pages/UnauthorizedPage"));
 
 // Loading spinner component
@@ -39,7 +40,8 @@ function App() {
         <Routes>
           {/* Public routes */}
           <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<Signup />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/signup" element={<Register />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/unauthorized" element={<UnauthorizedPage />} />
 
@@ -90,6 +92,16 @@ function App() {
               <ProtectedRoute>
                 <AppLayout>
                   <CategoriesPage />
+                </AppLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute>
+                <AppLayout>
+                  <ProfilePage />
                 </AppLayout>
               </ProtectedRoute>
             }

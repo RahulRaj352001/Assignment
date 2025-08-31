@@ -4,7 +4,8 @@ const response = require("../utils/response");
 module.exports = {
   async signup(req, res, next) {
     try {
-      const { name, email, password, role } = req.body;
+      const { name, email, password, role = "user" } = req.body;
+      console.log(name, email, password, role);
       const { user, token } = await authService.signup({
         name,
         email,
@@ -17,6 +18,7 @@ module.exports = {
         "User registered successfully"
       );
     } catch (err) {
+      console.log(err);
       return response.error(res, err.message, 400);
     }
   },

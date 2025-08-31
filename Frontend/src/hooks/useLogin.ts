@@ -1,6 +1,7 @@
 import { useMutation } from "@tanstack/react-query";
 import { LoginFormInputs } from "../types/auth";
 import { User } from "../types/auth.d";
+import axiosClient from "../utils/axiosClient";
 
 export function useLogin() {
   return useMutation<
@@ -9,17 +10,8 @@ export function useLogin() {
     LoginFormInputs
   >({
     mutationFn: async (data: LoginFormInputs) => {
-      // Simulate API request with setTimeout
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      
-      if (data.email === "demo@demo.com" && data.password === "password") {
-        return { 
-          token: "demo-token", 
-          user: { id: "1", email: data.email, name: "Demo User", role: "user" } 
-        };
-      } else {
-        throw new Error("Invalid credentials");
-      }
+      const response = await axiosClient.post("/auth/login", data);
+      return response.data;
     }
   });
 }

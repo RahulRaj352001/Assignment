@@ -10,18 +10,22 @@ const RESET_OTP = "1234";
 
 module.exports = {
   async signup({ name, email, password, role = "user" }) {
+    console.log(name, email, password, role);
     const existing = await userRepo.findByEmail(email);
+    console.log(existing);
     if (existing) {
       throw new Error("User already exists with this email");
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
+    console.log(hashedPassword);
     const user = await userRepo.createUser({
       name,
       email,
       password: hashedPassword,
       role,
     });
+    console.log(user);
 
     const token = jwt.sign(
       { id: user.id, email: user.email, role: user.role },

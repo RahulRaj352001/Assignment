@@ -10,4 +10,8 @@ pool.on("connect", () => {
   console.log("✅ Connected to PostgreSQL (Supabase)");
 });
 
+pool.on("error", (err) => {
+  console.error("❌ Database connection error:", err);
+});
+
 module.exports = pool;

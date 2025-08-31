@@ -10,7 +10,7 @@ const {
 } = require("../middleware/validators");
 
 // Signup & Login protected by rate limiter and validation
-router.post("/signup", authLimiter, validateSignup, authController.signup);
+router.post("/register", authLimiter, validateSignup, authController.signup);
 router.post("/login", authLimiter, validateLogin, authController.login);
 
 // Password reset endpoints with validation

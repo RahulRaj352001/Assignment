@@ -5,11 +5,13 @@ import { Link, useNavigate } from "react-router-dom";
 import { loginSchema } from "../../validation/authSchema";
 import { useLogin } from "../../hooks/useLogin";
 import { useAuth } from "../../hooks/useAuth";
+import { useNotification } from "../../hooks/useNotification";
 import { LoginFormInputs } from "../../types/auth";
 
 const LoginPage: React.FC = () => {
   const navigate = useNavigate();
   const { loginWithToken } = useAuth();
+  const { addNotification } = useNotification();
   const loginMutation = useLogin();
 
   const {
@@ -25,10 +27,12 @@ const LoginPage: React.FC = () => {
       const result = await loginMutation.mutateAsync(data);
       console.log("Login result:", result); // Debug log
       loginWithToken(result.token, result.user);
-      alert("Login successful!");
+      addNotification("success", "Login successful! Welcome back.");
       navigate("/dashboard");
-    } catch (error) {
-      alert(error instanceof Error ? error.message : "Login failed");
+    } catch (error: any) {
+      const errorMessage =
+        error.response?.data?.message || error.message || "Login failed";
+      addNotification("error", errorMessage);
     }
   };
 
@@ -143,21 +147,11 @@ const LoginPage: React.FC = () => {
             <p className="text-sm text-gray-600">
               Don't have an account?{" "}
               <Link
-                to="/signup"
+                to="/register"
                 className="text-indigo-600 hover:underline font-medium"
               >
                 Sign up
               </Link>
-            </p>
-          </div>
-
-          {/* Demo Credentials */}
-          <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-            <p className="text-sm text-gray-600 mb-2">Demo credentials:</p>
-            <p className="text-xs text-gray-500">
-              Email: demo@demo.com
-              <br />
-              Password: password
             </p>
           </div>
         </div>
