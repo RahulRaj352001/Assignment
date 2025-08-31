@@ -7,6 +7,8 @@ const swaggerUi = require("swagger-ui-express");
 const swaggerSpecs = require("./config/swagger");
 const errorHandler = require("./middleware/errorHandler");
 const authRoutes = require("./routes/auth.routes");
+const userRoutes = require("./routes/user.routes");
+const transactionRoutes = require("./routes/transaction.routes");
 
 require("dotenv").config();
 
@@ -35,6 +37,12 @@ app.get("/api/health", (req, res) => {
 
 // Auth routes
 app.use("/api/auth", authRoutes);
+
+// User routes (protected)
+app.use("/api/users", userRoutes);
+
+// Transaction routes (protected)
+app.use("/api/transactions", transactionRoutes);
 
 // Error handling middleware (must be last)
 app.use(errorHandler);

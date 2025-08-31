@@ -33,4 +33,16 @@ module.exports = {
     );
     return result.rows;
   },
+
+  async updateUser(id, updates) {
+    const { name, email } = updates;
+    const query = `
+      UPDATE users 
+      SET name = $1, email = $2, updated_at = NOW()
+      WHERE id = $3
+      RETURNING id, name, email, role, created_at, updated_at
+    `;
+    const result = await pool.query(query, [name, email, id]);
+    return result.rows[0];
+  },
 };

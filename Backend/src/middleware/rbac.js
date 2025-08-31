@@ -1,15 +1,15 @@
-const rbac = (allowedRoles) => {
+const response = require("../utils/response");
+
+function permit(...allowedRoles) {
   return (req, res, next) => {
     if (!req.user) {
-      return res.status(401).json({ message: 'Authentication required' });
+      return response.error(res, "Unauthorized", 401);
     }
-
     if (!allowedRoles.includes(req.user.role)) {
-      return res.status(403).json({ message: 'Insufficient permissions' });
+      return response.error(res, "Forbidden: insufficient rights", 403);
     }
-
     next();
   };
-};
+}
 
-module.exports = rbac;
+module.exports = permit;
