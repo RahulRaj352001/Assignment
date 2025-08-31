@@ -1,6 +1,7 @@
 export interface CategoryBreakdown {
   category: string;   // Example: "Food"
-  total: number;      // Total expense in this category
+  amount: number;     // Total expense in this category (matches backend)
+  percentage?: number; // Optional percentage for calculations
 }
 
 export interface MonthlyTrend {

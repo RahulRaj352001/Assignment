@@ -13,6 +13,7 @@ const transactionRoutes = require("./routes/transaction.routes");
 const categoryRoutes = require("./routes/category.routes");
 const analyticsRoutes = require("./routes/analytics.routes");
 const pool = require("./config/db");
+const redisClient = require("./config/redis");
 
 require("dotenv").config();
 
@@ -42,11 +43,15 @@ app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpecs));
 
 // Health Check route
 app.get("/api/health", (req, res) => {
+  const redisStatus =
+    redisClient.status === "ready" ? "connected" : "disconnected";
+
   res.json({
     status: "ok",
     message: "Backend running 🚀",
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV,
+    redis: redisStatus,
   });
 });
 

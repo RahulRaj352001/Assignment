@@ -4,6 +4,7 @@ import CategoryPie from "../../components/charts/CategoryPie";
 import MonthlyLine from "../../components/charts/MonthlyLine";
 import IncomeExpenseBar from "../../components/charts/IncomeExpenseBar";
 import { useAnalytics } from "../../hooks/useAnalytics";
+import { useUsers } from "../../hooks/useUsers";
 
 const DashboardPage: React.FC = () => {
   const { user } = useAuth();
@@ -12,6 +13,7 @@ const DashboardPage: React.FC = () => {
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [fromDate, setFromDate] = useState<string>("");
   const [toDate, setToDate] = useState<string>("");
+  const [selectedUserId, setSelectedUserId] = useState<string>("");
 
   // Generate last 5 years for year selector
   const yearOptions = useMemo(() => {
@@ -19,30 +21,34 @@ const DashboardPage: React.FC = () => {
     return Array.from({ length: 5 }, (_, i) => currentYear - i);
   }, []);
 
-  // Use the new analytics hook
+  // Get users for admin selection
+  const { users } = useUsers();
+
+  // Use the new analytics hook with user selection
   const { data, isLoading, hasError, refetch } = useAnalytics(
     selectedYear,
     fromDate,
-    toDate
+    toDate,
+    selectedUserId
   );
 
-  // Calculate totals using useMemo for performance
-  const totals = useMemo(() => {
+  // Calculate summary from monthly summary data (more accurate)
+  const summaryData = useMemo(() => {
     if (!data.monthlyTrend || data.monthlyTrend.length === 0) {
-      return { totalIncome: 0, totalExpense: 0, balance: 0 };
+      return { totalIncome: 0, totalExpenses: 0, balance: 0 };
     }
 
     const totalIncome = data.monthlyTrend.reduce(
-      (sum, item) => sum + item.income,
+      (sum, item) => sum + (parseFloat(item.income?.toString() || "0") || 0),
       0
     );
-    const totalExpense = data.monthlyTrend.reduce(
-      (sum, item) => sum + item.expense,
+    const totalExpenses = data.monthlyTrend.reduce(
+      (sum, item) => sum + (parseFloat(item.expense?.toString() || "0") || 0),
       0
     );
-    const balance = totalIncome - totalExpense;
+    const balance = totalIncome - totalExpenses;
 
-    return { totalIncome, totalExpense, balance };
+    return { totalIncome, totalExpenses, balance };
   }, [data.monthlyTrend]);
 
   // Refresh handler using useCallback
@@ -94,7 +100,9 @@ const DashboardPage: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Dashboard</h1>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+            Dashboard
+          </h1>
           <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
             Welcome back, {user?.name || "User"}
           </p>
@@ -138,7 +146,32 @@ const DashboardPage: React.FC = () => {
         <h3 className="text-sm font-medium text-gray-700 mb-3">
           Analytics Filters
         </h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          {/* Admin User Selection */}
+          {user?.role === "admin" && (
+            <div>
+              <label
+                htmlFor="user-select"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
+                User
+              </label>
+              <select
+                id="user-select"
+                value={selectedUserId}
+                onChange={(e) => setSelectedUserId(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="">All Users</option>
+                {users.map((u) => (
+                  <option key={u.id} value={u.id}>
+                    {u.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
           {/* Year Selector */}
           <div>
             <label
@@ -207,7 +240,7 @@ const DashboardPage: React.FC = () => {
         <div className="bg-white p-6 rounded-lg shadow-lg border-l-4 border-green-500">
           <h3 className="text-sm font-medium text-gray-500">Total Income</h3>
           <p className="text-2xl font-bold text-green-600">
-            ${totals.totalIncome.toLocaleString()}
+            ${(summaryData?.totalIncome || 0).toLocaleString()}
           </p>
           <p className="text-xs text-gray-400 mt-1">
             {selectedYear} •{" "}
@@ -217,7 +250,7 @@ const DashboardPage: React.FC = () => {
         <div className="bg-white p-6 rounded-lg shadow-lg border-l-4 border-red-500">
           <h3 className="text-sm font-medium text-gray-500">Total Expenses</h3>
           <p className="text-2xl font-bold text-red-600">
-            ${totals.totalExpense.toLocaleString()}
+            ${(summaryData?.totalExpenses || 0).toLocaleString()}
           </p>
           <p className="text-xs text-gray-400 mt-1">
             {selectedYear} •{" "}
@@ -228,10 +261,12 @@ const DashboardPage: React.FC = () => {
           <h3 className="text-sm font-medium text-gray-500">Balance</h3>
           <p
             className={`text-2xl font-bold ${
-              totals.balance >= 0 ? "text-green-600" : "text-red-600"
+              (summaryData?.balance || 0) >= 0
+                ? "text-green-600"
+                : "text-red-600"
             }`}
           >
-            ${totals.balance.toLocaleString()}
+            ${(summaryData?.balance || 0).toLocaleString()}
           </p>
           <p className="text-xs text-gray-400 mt-1">Net position</p>
         </div>

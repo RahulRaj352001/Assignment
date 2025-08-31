@@ -21,7 +21,7 @@ const CategoryPie: React.FC<CategoryPieProps> = ({ data }) => {
     labels: data.map((item) => item.category),
     datasets: [
       {
-        data: data.map((item) => item.total),
+        data: data.map((item) => item.amount),
         backgroundColor: [
           "#3B82F6", // Blue
           "#10B981", // Green
