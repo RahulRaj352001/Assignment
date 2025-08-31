@@ -8,13 +8,7 @@ interface UserRowProps {
 }
 
 const UserRow: React.FC<UserRowProps> = ({ user, onEdit, onDelete }) => {
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
-  };
+
 
   const getRoleBadgeColor = (role: string) => {
     switch (role) {
@@ -66,9 +60,7 @@ const UserRow: React.FC<UserRowProps> = ({ user, onEdit, onDelete }) => {
           {getRoleIcon(user.role)} {user.role}
         </span>
       </td>
-      <td className="px-4 py-3 text-sm text-gray-500">
-        {formatDate(user.createdAt)}
-      </td>
+   
       <td className="px-4 py-3 text-sm text-gray-500">
         <div className="flex items-center space-x-2">
           <button

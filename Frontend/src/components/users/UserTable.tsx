@@ -121,15 +121,7 @@ const UserTable: React.FC<UserTableProps> = ({ users, onEdit, onDelete }) => {
                   {getSortIcon("role")}
                 </div>
               </th>
-              <th 
-                className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors"
-                onClick={() => handleSort("createdAt")}
-              >
-                <div className="flex items-center">
-                  Created
-                  {getSortIcon("createdAt")}
-                </div>
-              </th>
+            
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Actions
               </th>
