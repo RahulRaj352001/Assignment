@@ -3,16 +3,14 @@ import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { useNavigate, Link } from "react-router-dom";
 import { registerSchema } from "../../validation/authSchema";
-import { useRegister } from "../../hooks/useRegister";
 import { useAuth } from "../../hooks/useAuth";
 import { useNotification } from "../../hooks/useNotification";
 import { RegisterFormInputs } from "../../types/auth";
 
 const RegisterPage: React.FC = () => {
   const navigate = useNavigate();
-  const { loginWithToken } = useAuth();
+  const { loginWithToken, registerAsync, isRegistering } = useAuth();
   const { addNotification } = useNotification();
-  const registerMutation = useRegister();
 
   const {
     register,
@@ -26,7 +24,7 @@ const RegisterPage: React.FC = () => {
   const onSubmit = async (data: RegisterFormInputs) => {
     try {
       const { confirmPassword, ...registerData } = data;
-      const result = await registerMutation.mutateAsync(registerData);
+      const result = await registerAsync(registerData);
       loginWithToken(result.token, result.user);
       addNotification(
         "success",
@@ -164,10 +162,10 @@ const RegisterPage: React.FC = () => {
             {/* Submit Button */}
             <button
               type="submit"
-              disabled={registerMutation.isPending}
+              disabled={isRegistering}
               className="w-full flex justify-center py-2 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {registerMutation.isPending ? (
+              {isRegistering ? (
                 <div className="flex items-center">
                   <svg
                     className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"

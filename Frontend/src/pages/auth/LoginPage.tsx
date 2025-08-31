@@ -3,16 +3,14 @@ import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { Link, useNavigate } from "react-router-dom";
 import { loginSchema } from "../../validation/authSchema";
-import { useLogin } from "../../hooks/useLogin";
 import { useAuth } from "../../hooks/useAuth";
 import { useNotification } from "../../hooks/useNotification";
 import { LoginFormInputs } from "../../types/auth";
 
 const LoginPage: React.FC = () => {
   const navigate = useNavigate();
-  const { loginWithToken } = useAuth();
+  const { loginWithToken, loginAsync, isLoggingIn } = useAuth();
   const { addNotification } = useNotification();
-  const loginMutation = useLogin();
 
   const {
     register,
@@ -24,7 +22,7 @@ const LoginPage: React.FC = () => {
 
   const onSubmit = async (data: LoginFormInputs) => {
     try {
-      const result = await loginMutation.mutateAsync(data);
+      const result = await loginAsync(data);
       console.log("Login result:", result); // Debug log
       loginWithToken(result.token, result.user);
       addNotification("success", "Login successful! Welcome back.");
@@ -99,10 +97,10 @@ const LoginPage: React.FC = () => {
             {/* Submit Button */}
             <button
               type="submit"
-              disabled={loginMutation.isPending}
+              disabled={isLoggingIn}
               className="w-full flex justify-center py-2 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loginMutation.isPending ? (
+              {isLoggingIn ? (
                 <div className="flex items-center">
                   <svg
                     className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"

@@ -15,6 +15,7 @@ interface AuthContextType extends AuthState {
   logout: () => void;
   refreshUser: () => Promise<void>;
   refreshToken: () => Promise<void>;
+  isLoading: boolean;
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(
@@ -29,6 +30,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     token: localStorage.getItem("token"),
     isAuthenticated: !!localStorage.getItem("token"),
   });
+  const [isLoading, setIsLoading] = useState(true);
 
   const logout = useCallback(() => {
     localStorage.removeItem("token");
@@ -37,21 +39,47 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
   // Fetch current user profile from backend
   const refreshUser = useCallback(async () => {
-    if (!state.token) return;
+    if (!state.token) {
+      setIsLoading(false);
+      return;
+    }
 
     try {
+      setIsLoading(true);
+      console.log("Fetching user profile with token:", state.token);
       const { data } = await axiosClient.get("/users/profile/me");
-      console.log(data , "data");
-      setState((prev) => ({ ...prev, user: data.data, isAuthenticated: true }));
-    } catch (error) {
+      console.log("User profile response:", data);
+
+      if (data && data.data) {
+        setState((prev) => ({
+          ...prev,
+          user: data.data,
+          isAuthenticated: true,
+        }));
+        console.log("User profile set successfully:", data.data);
+      } else {
+        console.error("Invalid user profile data structure:", data);
+        logout();
+      }
+    } catch (error: any) {
       console.error("Failed to fetch user profile:", error);
+      console.error("Error details:", {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status,
+        url: error.config?.url,
+      });
       logout();
+    } finally {
+      setIsLoading(false);
     }
   }, [state.token, logout]);
 
   useEffect(() => {
     if (state.token) {
       refreshUser();
+    } else {
+      setIsLoading(false);
     }
   }, [state.token, refreshUser]);
 
@@ -62,7 +90,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   const loginWithToken = useCallback((token: string, user: User) => {
-    console.log(user , token);
+    console.log(user, token);
     localStorage.setItem("token", token);
     setState({ user, token, isAuthenticated: true });
     console.log("Login successful:", { user, token, isAuthenticated: true }); // Debug log
@@ -98,6 +126,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         logout,
         refreshUser,
         refreshToken,
+        isLoading,
       }}
     >
       {children}

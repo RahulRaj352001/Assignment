@@ -1,24 +1,12 @@
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
-import * as yup from "yup";
-import { useAuth } from "../hooks/useAuth";
-import { useNotification } from "../hooks/useNotification";
-import axiosClient from "../utils/axiosClient";
-
-// Validation schema for profile updates
-const profileSchema = yup.object().shape({
-  name: yup.string().min(2, "Name must be at least 2 characters").required("Name is required"),
-  email: yup.string().email("Invalid email").required("Email is required"),
-});
-
-type ProfileFormData = yup.InferType<typeof profileSchema>;
+import { useProfile } from "../hooks/useProfile";
+import { profileSchema, ProfileFormData } from "../validation/profileSchema";
 
 const ProfilePage: React.FC = () => {
-  const { user, refreshUser } = useAuth();
-  const { addNotification } = useNotification();
+  const { user, isUpdating, updateProfile, resetProfile } = useProfile();
   const [isEditing, setIsEditing] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
 
   const {
     register,
@@ -44,25 +32,15 @@ const ProfilePage: React.FC = () => {
   }, [user, reset]);
 
   const onSubmit = async (data: ProfileFormData) => {
-    setIsLoading(true);
-    try {
-      await axiosClient.put("/users/profile/me", data);
-      addNotification("success", "Profile updated successfully!");
-      await refreshUser(); // Refresh user data
+    const success = await updateProfile(data);
+    if (success) {
       setIsEditing(false);
-    } catch (error: any) {
-      const errorMessage = error.response?.data?.message || error.message || "Failed to update profile";
-      addNotification("error", errorMessage);
-    } finally {
-      setIsLoading(false);
     }
   };
 
   const handleCancel = () => {
-    reset({
-      name: user?.name || "",
-      email: user?.email || "",
-    });
+    const defaultValues = resetProfile();
+    reset(defaultValues);
     setIsEditing(false);
   };
 
@@ -106,7 +84,11 @@ const ProfilePage: React.FC = () => {
                   : "bg-gray-100 text-gray-800"
               }`}
             >
-              {user.role === "admin" ? "👑 Admin" : user.role === "user" ? "👤 User" : "👁️ Read-only"}
+              {user.role === "admin"
+                ? "👑 Admin"
+                : user.role === "user"
+                ? "👤 User"
+                : "👁️ Read-only"}
             </span>
           </div>
         </div>
@@ -116,7 +98,10 @@ const ProfilePage: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Name Field */}
             <div>
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
+              <label
+                htmlFor="name"
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
                 Full Name
               </label>
               <input
@@ -129,13 +114,18 @@ const ProfilePage: React.FC = () => {
                 } ${!isEditing ? "bg-gray-100 cursor-not-allowed" : ""}`}
               />
               {errors.name && (
-                <p className="text-red-500 text-sm mt-1">{errors.name.message}</p>
+                <p className="text-red-500 text-sm mt-1">
+                  {errors.name.message}
+                </p>
               )}
             </div>
 
             {/* Email Field */}
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+              <label
+                htmlFor="email"
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
                 Email Address
               </label>
               <input
@@ -148,7 +138,9 @@ const ProfilePage: React.FC = () => {
                 } ${!isEditing ? "bg-gray-100 cursor-not-allowed" : ""}`}
               />
               {errors.email && (
-                <p className="text-red-500 text-sm mt-1">{errors.email.message}</p>
+                <p className="text-red-500 text-sm mt-1">
+                  {errors.email.message}
+                </p>
               )}
             </div>
           </div>
@@ -158,15 +150,15 @@ const ProfilePage: React.FC = () => {
             <div className="flex space-x-4">
               <button
                 type="submit"
-                disabled={isLoading}
+                disabled={isUpdating}
                 className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
-                {isLoading ? "Saving..." : "Save Changes"}
+                {isUpdating ? "Saving..." : "Save Changes"}
               </button>
               <button
                 type="button"
                 onClick={handleCancel}
-                disabled={isLoading}
+                disabled={isUpdating}
                 className="px-6 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 Cancel
@@ -192,9 +184,12 @@ const ProfilePage: React.FC = () => {
               />
             </svg>
             <div>
-              <h4 className="text-sm font-medium text-blue-800">Security Note</h4>
+              <h4 className="text-sm font-medium text-blue-800">
+                Security Note
+              </h4>
               <p className="text-sm text-blue-700 mt-1">
-                For security reasons, password changes are handled separately. Contact an administrator if you need to reset your password.
+                For security reasons, password changes are handled separately.
+                Contact an administrator if you need to reset your password.
               </p>
             </div>
           </div>

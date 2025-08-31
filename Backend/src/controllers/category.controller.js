@@ -13,6 +13,7 @@ module.exports = {
 
   async list(req, res) {
     try {
+      console.log("Listing categories");
       const categories = await categoryService.getAllCategories();
       return response.success(res, categories, "Categories fetched");
     } catch (err) {

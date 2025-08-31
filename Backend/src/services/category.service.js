@@ -21,7 +21,7 @@ module.exports = {
     const categories = await categoryRepo.getAllCategories();
 
     // 3️⃣ Store in cache for 1 hour
-    await redisClient.setEx(CACHE_KEY, 3600, JSON.stringify(categories));
+    await redisClient.setex(CACHE_KEY, 3600, JSON.stringify(categories));
 
     return categories;
   },

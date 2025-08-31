@@ -1,29 +1,18 @@
 import React, { useEffect } from "react";
 import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { Category, CreateCategoryInput } from "../../types/category";
+import { yupResolver } from "@hookform/resolvers/yup";
+import { Category } from "../../types/category";
 import { useAuth } from "../../hooks/useAuth";
-
-// Zod validation schema
-const categorySchema = z.object({
-  name: z
-    .string()
-    .min(3, "Name must be at least 3 characters")
-    .max(50, "Name must be less than 50 characters")
-    .trim(),
-  type: z.enum(["income", "expense"], {
-    required_error: "Please select a type",
-  }),
-});
-
-type CategoryFormData = z.infer<typeof categorySchema>;
+import {
+  categorySchema,
+  CategoryFormData,
+} from "../../validation/categorySchema";
 
 interface CategoryFormProps {
   category?: Category | null;
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (data: CreateCategoryInput) => Promise<void>;
+  onSubmit: (data: Omit<Category, "id">) => Promise<void>;
   isSubmitting: boolean;
 }
 
@@ -43,7 +32,7 @@ const CategoryForm: React.FC<CategoryFormProps> = ({
     reset,
     formState: { errors, isValid },
   } = useForm<CategoryFormData>({
-    resolver: zodResolver(categorySchema),
+    resolver: yupResolver(categorySchema),
     mode: "onChange",
     defaultValues: {
       name: category?.name || "",
@@ -117,7 +106,10 @@ const CategoryForm: React.FC<CategoryFormProps> = ({
                   {category ? "Edit Category" : "Add New Category"}
                 </h3>
                 <div className="mt-4">
-                  <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
+                  <form
+                    onSubmit={handleSubmit(handleFormSubmit)}
+                    className="space-y-4"
+                  >
                     {/* Name Field */}
                     <div>
                       <label
@@ -163,9 +155,11 @@ const CategoryForm: React.FC<CategoryFormProps> = ({
                               !canModify ? "cursor-not-allowed" : ""
                             }`}
                           />
-                          <span className={`ml-2 text-sm ${
-                            !canModify ? "text-gray-400" : "text-gray-700"
-                          }`}>
+                          <span
+                            className={`ml-2 text-sm ${
+                              !canModify ? "text-gray-400" : "text-gray-700"
+                            }`}
+                          >
                             💸 Expense
                           </span>
                         </label>
@@ -179,9 +173,11 @@ const CategoryForm: React.FC<CategoryFormProps> = ({
                               !canModify ? "cursor-not-allowed" : ""
                             }`}
                           />
-                          <span className={`ml-2 text-sm ${
-                            !canModify ? "text-gray-400" : "text-gray-700"
-                          }`}>
+                          <span
+                            className={`ml-2 text-sm ${
+                              !canModify ? "text-gray-400" : "text-gray-700"
+                            }`}
+                          >
                             💰 Income
                           </span>
                         </label>
@@ -231,8 +227,10 @@ const CategoryForm: React.FC<CategoryFormProps> = ({
                   </svg>
                   {category ? "Updating..." : "Creating..."}
                 </div>
+              ) : category ? (
+                "Update Category"
               ) : (
-                category ? "Update Category" : "Create Category"
+                "Create Category"
               )}
             </button>
             <button

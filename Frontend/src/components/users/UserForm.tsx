@@ -1,31 +1,8 @@
 import React, { useEffect } from "react";
 import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
+import { yupResolver } from "@hookform/resolvers/yup";
 import { User, CreateUserInput, UpdateUserInput } from "../../types/user";
-
-// Zod validation schema
-const userSchema = z.object({
-  name: z
-    .string()
-    .min(3, "Name must be at least 3 characters")
-    .max(50, "Name must be less than 50 characters")
-    .trim(),
-  email: z
-    .string()
-    .email("Please enter a valid email address")
-    .min(1, "Email is required"),
-  password: z
-    .string()
-    .min(6, "Password must be at least 6 characters")
-    .max(100, "Password must be less than 100 characters")
-    .optional(),
-  role: z.enum(["admin", "user", "read-only"], {
-    required_error: "Please select a role",
-  }),
-});
-
-type UserFormData = z.infer<typeof userSchema>;
+import { userSchema, UserFormData } from "../../validation/userSchema";
 
 interface UserFormProps {
   user?: User | null;
@@ -42,23 +19,23 @@ const UserForm: React.FC<UserFormProps> = ({
   onSubmit,
   isSubmitting,
 }) => {
+  const isEditMode = !!user;
+
   const {
     register,
     handleSubmit,
     reset,
     formState: { errors, isValid },
-  } = useForm<UserFormData>({
-    resolver: zodResolver(userSchema),
+  } = useForm({
+    resolver: yupResolver(userSchema),
     mode: "onChange",
     defaultValues: {
       name: "",
       email: "",
       password: "",
-      role: "user",
+      role: "user" as const,
     },
   });
-
-  const isEditMode = !!user;
 
   // Reset form when user changes (for edit mode)
   useEffect(() => {
@@ -79,7 +56,7 @@ const UserForm: React.FC<UserFormProps> = ({
     }
   }, [user, reset]);
 
-  const handleFormSubmit = async (data: UserFormData) => {
+  const handleFormSubmit = async (data: any) => {
     try {
       if (isEditMode && user) {
         // Edit mode - password is optional
@@ -152,7 +129,10 @@ const UserForm: React.FC<UserFormProps> = ({
                   {user ? "Edit User" : "Add New User"}
                 </h3>
                 <div className="mt-4">
-                  <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
+                  <form
+                    onSubmit={handleSubmit(handleFormSubmit)}
+                    className="space-y-4"
+                  >
                     {/* Name Field */}
                     <div>
                       <label
@@ -211,8 +191,13 @@ const UserForm: React.FC<UserFormProps> = ({
                         htmlFor="password"
                         className="block text-sm font-medium text-gray-700 mb-1"
                       >
-                        Password {!isEditMode && <span className="text-red-500">*</span>}
-                        {isEditMode && <span className="text-gray-500 text-xs">(leave blank to keep current)</span>}
+                        Password{" "}
+                        {!isEditMode && <span className="text-red-500">*</span>}
+                        {isEditMode && (
+                          <span className="text-gray-500 text-xs">
+                            (leave blank to keep current)
+                          </span>
+                        )}
                       </label>
                       <input
                         {...register("password")}
@@ -223,7 +208,11 @@ const UserForm: React.FC<UserFormProps> = ({
                             ? "border-red-500 focus:ring-red-500 focus:border-red-500"
                             : "border-gray-300"
                         }`}
-                        placeholder={isEditMode ? "Enter new password (optional)" : "Enter password"}
+                        placeholder={
+                          isEditMode
+                            ? "Enter new password (optional)"
+                            : "Enter password"
+                        }
                       />
                       {errors.password && (
                         <p className="text-red-500 text-sm mt-1">
@@ -278,6 +267,56 @@ const UserForm: React.FC<UserFormProps> = ({
                         </p>
                       )}
                     </div>
+
+                    {/* Form Actions */}
+                    <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                      <button
+                        type="submit"
+                        disabled={!isValid || isSubmitting}
+                        className={`w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 text-base font-medium text-white focus:outline-none focus:ring-2 focus:ring-offset-2 sm:ml-3 sm:w-auto sm:text-sm ${
+                          !isValid || isSubmitting
+                            ? "bg-gray-400 cursor-not-allowed"
+                            : "bg-blue-600 hover:bg-blue-700 focus:ring-blue-500"
+                        }`}
+                      >
+                        {isSubmitting ? (
+                          <div className="flex items-center">
+                            <svg
+                              className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                            >
+                              <circle
+                                className="opacity-25"
+                                cx="12"
+                                cy="12"
+                                r="10"
+                                stroke="currentColor"
+                                strokeWidth="4"
+                              />
+                              <path
+                                className="opacity-75"
+                                fill="currentColor"
+                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                              />
+                            </svg>
+                            {user ? "Updating..." : "Creating..."}
+                          </div>
+                        ) : user ? (
+                          "Update User"
+                        ) : (
+                          "Create User"
+                        )}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleCancel}
+                        disabled={isSubmitting}
+                        className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        Cancel
+                      </button>
+                    </div>
                   </form>
                 </div>
               </div>
@@ -285,8 +324,7 @@ const UserForm: React.FC<UserFormProps> = ({
           </div>
           <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
             <button
-              type="button"
-              onClick={handleSubmit(handleFormSubmit)}
+              type="submit"
               disabled={!isValid || isSubmitting}
               className={`w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 text-base font-medium text-white focus:outline-none focus:ring-2 focus:ring-offset-2 sm:ml-3 sm:w-auto sm:text-sm ${
                 !isValid || isSubmitting
@@ -317,8 +355,10 @@ const UserForm: React.FC<UserFormProps> = ({
                   </svg>
                   {user ? "Updating..." : "Creating..."}
                 </div>
+              ) : user ? (
+                "Update User"
               ) : (
-                user ? "Update User" : "Create User"
+                "Create User"
               )}
             </button>
             <button
