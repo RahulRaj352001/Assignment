@@ -3,7 +3,7 @@ import { useAuth } from "../../hooks/useAuth";
 import CategoryPie from "../../components/charts/CategoryPie";
 import MonthlyLine from "../../components/charts/MonthlyLine";
 import IncomeExpenseBar from "../../components/charts/IncomeExpenseBar";
-import { useAnalytics } from "../../hooks/useAnalytics";
+import { useAnalytics, useRefreshCache } from "../../hooks/useAnalytics";
 import { useUsers } from "../../hooks/useUsers";
 
 const DashboardPage: React.FC = () => {
@@ -32,6 +32,9 @@ const DashboardPage: React.FC = () => {
     selectedUserId
   );
 
+  // Use the refresh cache hook
+  const refreshCacheMutation = useRefreshCache(selectedUserId);
+
   // Calculate summary from monthly summary data (more accurate)
   const summaryData = useMemo(() => {
     if (!data.monthlyTrend || data.monthlyTrend.length === 0) {
@@ -53,10 +56,12 @@ const DashboardPage: React.FC = () => {
 
   // Refresh handler using useCallback
   const handleRefresh = useCallback(() => {
+    // Refresh cache first, then refetch data
+    refreshCacheMutation.mutate();
     refetch.categoryBreakdown();
     refetch.monthlyTrend();
     refetch.incomeExpense();
-  }, [refetch]);
+  }, [refreshCacheMutation, refetch, selectedUserId]);
 
   // Filter change handlers
   const handleYearChange = useCallback((year: number) => {
@@ -109,10 +114,10 @@ const DashboardPage: React.FC = () => {
         </div>
         <button
           onClick={handleRefresh}
-          disabled={isLoading}
+          disabled={isLoading || refreshCacheMutation.isPending}
           className="mt-4 sm:mt-0 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {isLoading ? (
+          {isLoading || refreshCacheMutation.isPending ? (
             <div className="flex items-center">
               <svg
                 className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
@@ -136,7 +141,7 @@ const DashboardPage: React.FC = () => {
               Refreshing...
             </div>
           ) : (
-            "Refresh Data"
+            "Clear Cache & Reload Data"
           )}
         </button>
       </div>
@@ -330,24 +335,26 @@ const DashboardPage: React.FC = () => {
 
       {/* Cache Info */}
       <div className="bg-blue-50 border border-blue-200 text-blue-700 px-4 py-3 rounded">
-        <div className="flex items-center">
-          <svg
-            className="w-5 h-5 mr-2"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-            />
-          </svg>
-          <span className="text-sm">
-            <strong>Analytics Data:</strong> Cached for 15 minutes. Data
-            automatically refreshes when transactions are updated.
-          </span>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center">
+            <svg
+              className="w-5 h-5 mr-2"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+            <span className="text-sm">
+              <strong>Analytics Data:</strong> Cached for 15 minutes. Use
+              "Refresh Data & Cache" to clear cache and reload fresh data.
+            </span>
+          </div>
         </div>
       </div>
     </div>

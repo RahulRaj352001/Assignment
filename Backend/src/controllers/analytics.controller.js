@@ -43,4 +43,14 @@ module.exports = {
       return response.error(res, err.message);
     }
   },
+
+  async refreshCache(req, res) {
+    try {
+      const { user_id } = req.query;
+      await analyticsService.refreshCache(user_id);
+      return response.success(res, null, "Cache refreshed successfully for user " + user_id);
+    } catch (err) {
+      return response.error(res, err.message);
+    }
+  },
 };

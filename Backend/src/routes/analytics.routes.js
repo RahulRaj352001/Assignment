@@ -30,4 +30,10 @@ router.get(
   analyticsController.incomeVsExpense
 );
 
+router.post(
+  "/refresh-cache",
+  auth,
+  analyticsController.refreshCache
+);
+
 module.exports = router;

@@ -1,5 +1,6 @@
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "./useAuth";
+import { useNotification } from "./useNotification";
 import axiosClient from "../utils/axiosClient";
 import { CategoryBreakdown, MonthlyTrend, IncomeExpense } from "../types/analytics";
 
@@ -28,9 +29,15 @@ const fetchIncomeExpense = async (user_id?: string): Promise<IncomeExpense[]> =>
   return response.data.data;
 };
 
+const refreshCache = async (user_id?: string) => {
+  const response = await axiosClient.post(`/analytics/refresh-cache?user_id=${user_id}`);
+  return response.data.data;
+};
+
 // Custom hook for analytics data
 export const useAnalytics = (year: number, fromDate?: string, toDate?: string, selectedUserId?: string) => {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   
   // Use selectedUserId if provided (for admin), otherwise use current user's ID
   const targetUserId = selectedUserId || user?.id;
@@ -85,6 +92,13 @@ export const useAnalytics = (year: number, fromDate?: string, toDate?: string, s
       monthlyTrend: monthlyTrend.refetch,
       incomeExpense: incomeExpense.refetch,
     },
+    // Cache refresh function
+    refreshCache: () => {
+      // Invalidate all analytics queries for the current user
+      queryClient.invalidateQueries({ queryKey: ["analytics", "category-breakdown", targetUserId] });
+      queryClient.invalidateQueries({ queryKey: ["analytics", "monthly-trend", targetUserId] });
+      queryClient.invalidateQueries({ queryKey: ["analytics", "income-expense", targetUserId] });
+    },
   };
 };
 
@@ -116,5 +130,23 @@ export const useIncomeExpense = (user_id?: string) => {
     staleTime: 1000 * 60 * 15,
     gcTime: 1000 * 60 * 30,
     refetchOnWindowFocus: false,
+  });
+};
+
+export const useRefreshCache = (user_id?: string) => {
+  const queryClient = useQueryClient();
+  const { addNotification } = useNotification();
+  
+  return useMutation({
+    mutationFn: () => refreshCache(user_id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["analytics", "category-breakdown", user_id] });
+      queryClient.invalidateQueries({ queryKey: ["analytics", "monthly-trend", user_id] });
+      queryClient.invalidateQueries({ queryKey: ["analytics", "income-expense", user_id] });
+      addNotification("success", "Cache refreshed successfully!");
+    },
+    onError: (error: any) => {
+      addNotification("error", error.response?.data?.message || error.message || "Failed to refresh cache");
+    },
   });
 };

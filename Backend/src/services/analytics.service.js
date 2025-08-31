@@ -115,4 +115,14 @@ module.exports = {
     await setCacheWithExpiry(cacheKey, formattedData, 900); // 15 min
     return formattedData;
   },
+
+
+  refreshCache: async (user_id) => {
+    const cacheKeyanalyticsMonthly = `analytics:monthly:${user_id}`;
+    await redisClient.del(cacheKeyanalyticsMonthly);
+    const cacheKeyanalyticsCategories = `analytics:categories:${user_id}`;
+    await redisClient.del(cacheKeyanalyticsCategories);
+    const cacheKeyanalyticsIncomeExpense = `analytics:income-expense:${user_id}`;
+    await redisClient.del(cacheKeyanalyticsIncomeExpense);
+  },
 };
