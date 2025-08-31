@@ -1,38 +1,44 @@
 const express = require("express");
 const router = express.Router();
-const transactionRepo = require("../repositories/transaction.repo");
+const transactionController = require("../controllers/transaction.controller");
 const auth = require("../middleware/auth");
 const permit = require("../middleware/rbac");
-const response = require("../utils/response");
+const { transactionLimiter } = require("../middleware/rateLimit");
 
-// GET /api/transactions - All roles can view
+// GET transactions (all roles)
 router.get(
   "/",
   auth,
   permit("admin", "user", "read-only"),
-  async (req, res) => {
-    try {
-      const transactions = await transactionRepo.getUserTransactions(
-        req.user.id
-      );
-      return response.success(res, transactions, "Fetched transactions");
-    } catch (err) {
-      return response.error(res, err.message);
-    }
-  }
+  transactionLimiter,
+  transactionController.list
 );
 
-// POST /api/transactions - Only admin + user
-router.post("/", auth, permit("admin", "user"), async (req, res) => {
-  try {
-    const newTx = await transactionRepo.createTransaction({
-      user_id: req.user.id,
-      ...req.body,
-    });
-    return response.success(res, newTx, "Transaction created");
-  } catch (err) {
-    return response.error(res, err.message);
-  }
-});
+// POST create (admin + user only)
+router.post(
+  "/",
+  auth,
+  permit("admin", "user"),
+  transactionLimiter,
+  transactionController.create
+);
+
+// PUT update (admin + user only)
+router.put(
+  "/:id",
+  auth,
+  permit("admin", "user"),
+  transactionLimiter,
+  transactionController.update
+);
+
+// DELETE remove (admin + user only)
+router.delete(
+  "/:id",
+  auth,
+  permit("admin", "user"),
+  transactionLimiter,
+  transactionController.delete
+);
 
 module.exports = router;

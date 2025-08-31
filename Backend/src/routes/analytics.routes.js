@@ -1,12 +1,24 @@
-// Analytics routes placeholder
-// Will be implemented in Part 9 with route definitions
-
-const express = require('express');
+const express = require("express");
 const router = express.Router();
+const auth = require("../middleware/auth");
+const permit = require("../middleware/rbac");
+const { analyticsLimiter } = require("../middleware/rateLimit");
+const response = require("../utils/response");
 
-// Placeholder routes - will be implemented in Part 9
-router.get('/health', (req, res) => {
-  res.json({ message: 'Analytics routes placeholder' });
-});
+// Example: GET /api/analytics/monthly
+router.get(
+  "/monthly",
+  auth,
+  permit("admin", "user", "read-only"),
+  analyticsLimiter,
+  async (req, res) => {
+    try {
+      // Analytics service logic will be added in Part 9
+      return response.success(res, {}, "Analytics coming soon");
+    } catch (err) {
+      return response.error(res, err.message);
+    }
+  }
+);
 
 module.exports = router;

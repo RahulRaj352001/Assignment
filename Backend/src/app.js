@@ -1,6 +1,7 @@
 const express = require("express");
-const cors = require("cors");
 const helmet = require("helmet");
+const xssClean = require("xss-clean");
+const cors = require("cors");
 const morgan = require("morgan");
 const compression = require("compression");
 const swaggerUi = require("swagger-ui-express");
@@ -9,18 +10,28 @@ const errorHandler = require("./middleware/errorHandler");
 const authRoutes = require("./routes/auth.routes");
 const userRoutes = require("./routes/user.routes");
 const transactionRoutes = require("./routes/transaction.routes");
+const analyticsRoutes = require("./routes/analytics.routes");
 
 require("dotenv").config();
 
 const app = express();
 
-// Middleware
-app.use(express.json({ limit: "10mb" }));
-app.use(express.urlencoded({ extended: true, limit: "10mb" }));
-app.use(cors());
-app.use(helmet());
+// ✅ Security Middlewares
+app.use(helmet()); // Secure HTTP headers
+app.use(xssClean()); // Prevent XSS attacks
+app.use(express.json({ limit: "10kb" })); // Prevent large payload DOS attacks
+app.use(express.urlencoded({ extended: true, limit: "10kb" }));
 app.use(compression());
 app.use(morgan("dev"));
+
+// ✅ CORS (restrict to frontend domain in production)
+app.use(
+  cors({
+    origin: process.env.FRONTEND_URL || "http://localhost:3000",
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    credentials: true,
+  })
+);
 
 // API Documentation
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpecs));
@@ -43,6 +54,9 @@ app.use("/api/users", userRoutes);
 
 // Transaction routes (protected)
 app.use("/api/transactions", transactionRoutes);
+
+// Analytics routes (protected)
+app.use("/api/analytics", analyticsRoutes);
 
 // Error handling middleware (must be last)
 app.use(errorHandler);

@@ -1,19 +1,27 @@
-const rateLimit = require('express-rate-limit');
+const rateLimit = require("express-rate-limit");
+const response = require("../utils/response");
 
-const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5, // limit each IP to 5 requests per windowMs
-  message: 'Too many login attempts, please try again later.',
-  standardHeaders: true,
-  legacyHeaders: false,
-});
+// Custom handler for JSON response
+const handler = (req, res) => {
+  return response.error(res, "Too many requests, please try again later.", 429);
+};
 
-const apiLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 requests per windowMs
-  message: 'Too many requests from this IP, please try again later.',
-  standardHeaders: true,
-  legacyHeaders: false,
-});
+module.exports = {
+  authLimiter: rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 5, // 5 requests
+    handler,
+  }),
 
-module.exports = { authLimiter, apiLimiter };
+  transactionLimiter: rateLimit({
+    windowMs: 60 * 60 * 1000, // 1 hour
+    max: 100, // 100 requests
+    handler,
+  }),
+
+  analyticsLimiter: rateLimit({
+    windowMs: 60 * 60 * 1000, // 1 hour
+    max: 50, // 50 requests
+    handler,
+  }),
+};
