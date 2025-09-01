@@ -116,7 +116,6 @@ module.exports = {
     return formattedData;
   },
 
-
   refreshCache: async (user_id) => {
     const cacheKeyanalyticsMonthly = `analytics:monthly:${user_id}`;
     await redisClient.del(cacheKeyanalyticsMonthly);

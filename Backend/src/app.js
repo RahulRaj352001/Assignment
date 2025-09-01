@@ -13,7 +13,6 @@ const transactionRoutes = require("./routes/transaction.routes");
 const categoryRoutes = require("./routes/category.routes");
 const analyticsRoutes = require("./routes/analytics.routes");
 const pool = require("./config/db");
-const redisClient = require("./config/redis");
 
 require("dotenv").config();
 
