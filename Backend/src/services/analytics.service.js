@@ -117,11 +117,23 @@ module.exports = {
   },
 
   refreshCache: async (user_id) => {
-    const cacheKeyanalyticsMonthly = `analytics:monthly:${user_id}`;
-    await redisClient.del(cacheKeyanalyticsMonthly);
-    const cacheKeyanalyticsCategories = `analytics:categories:${user_id}`;
-    await redisClient.del(cacheKeyanalyticsCategories);
-    const cacheKeyanalyticsIncomeExpense = `analytics:income-expense:${user_id}`;
-    await redisClient.del(cacheKeyanalyticsIncomeExpense);
+    const cacheKeys = [
+      `analytics:monthly:${user_id}`,
+      `analytics:categories:${user_id}`,
+      `analytics:income-expense:${user_id}`,
+    ];
+
+    for (const key of cacheKeys) {
+      try {
+        if (redisClient && redisClient.status === "ready") {
+          await redisClient.del(key);
+        }
+      } catch (error) {
+        console.warn(
+          `Redis cache deletion failed for key ${key}:`,
+          error.message
+        );
+      }
+    }
   },
 };
